@@ -1,0 +1,67 @@
+title: Move Apartments
+description: >
+  Complete moving checklist from finding a new place to settling in.
+  Covers logistics, utilities, and the move itself.
+type: SEQUENTIAL
+outcome: "Moved into {new_address} and fully settled"
+icon: home
+variables:
+  - new_address
+  - move_date
+
+tasks:
+  - title: "Research neighborhoods and set budget"
+    estimatedMins: 60
+    energyLevel: HIGH
+    contextName: "@Computer"
+
+  - title: "Schedule apartment viewings"
+    estimatedMins: 30
+    energyLevel: MEDIUM
+    contextName: "@Phone"
+
+  - title: "Sign lease for {new_address}"
+    estimatedMins: 30
+    energyLevel: MEDIUM
+
+  - title: "Give notice to current landlord"
+    estimatedMins: 15
+    energyLevel: LOW
+
+  - title: "Book movers or rent a truck for {move_date}"
+    estimatedMins: 30
+    energyLevel: MEDIUM
+    contextName: "@Computer"
+
+  - title: "Set up utilities at {new_address}"
+    notes: "Electricity, gas, water, internet, trash collection"
+    estimatedMins: 45
+    energyLevel: MEDIUM
+    contextName: "@Phone"
+
+  - title: "Update address — mail forwarding, bank, subscriptions"
+    estimatedMins: 30
+    energyLevel: LOW
+    contextName: "@Computer"
+
+  - title: "Pack non-essentials"
+    estimatedMins: 120
+    energyLevel: HIGH
+    contextName: "@Home"
+
+  - title: "Pack remaining items"
+    estimatedMins: 120
+    energyLevel: HIGH
+    contextName: "@Home"
+
+  - title: "Move day — supervise movers, transport belongings"
+    estimatedMins: 240
+    energyLevel: HIGH
+
+  - title: "Clean old apartment"
+    estimatedMins: 120
+    energyLevel: MEDIUM
+
+  - title: "Unpack essentials and set up {new_address}"
+    estimatedMins: 180
+    energyLevel: HIGH

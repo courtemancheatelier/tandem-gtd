@@ -1,0 +1,40 @@
+title: Weekly Grocery Run
+description: >
+  Reusable grocery shopping checklist. Plan meals, make a list,
+  shop, and put everything away.
+type: PARALLEL
+outcome: "Groceries for the week are bought and put away"
+icon: shopping-cart
+variables:
+  - store
+
+tasks:
+  - title: "Plan meals for the week"
+    estimatedMins: 15
+    energyLevel: LOW
+    contextName: "@Home"
+
+  - title: "Check pantry and fridge for what's needed"
+    estimatedMins: 10
+    energyLevel: LOW
+    contextName: "@Home"
+
+  - title: "Write grocery list"
+    estimatedMins: 10
+    energyLevel: LOW
+    contextName: "@Home"
+
+  - title: "Shop at {store}"
+    estimatedMins: 45
+    energyLevel: MEDIUM
+    contextName: "@Errands"
+
+  - title: "Put away groceries"
+    estimatedMins: 15
+    energyLevel: LOW
+    contextName: "@Home"
+
+  - title: "Meal prep if needed"
+    estimatedMins: 60
+    energyLevel: MEDIUM
+    contextName: "@Home"

@@ -1,0 +1,28 @@
+import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
+
+export async function GET(req: NextRequest) {
+  const code = req.nextUrl.searchParams.get("code");
+  if (!code) {
+    return NextResponse.json({ valid: false });
+  }
+
+  const inviteCode = await prisma.inviteCode.findUnique({
+    where: { code: code.toUpperCase() },
+    select: { id: true, usedById: true, expiresAt: true },
+  });
+
+  if (!inviteCode) {
+    return NextResponse.json({ valid: false });
+  }
+
+  if (inviteCode.usedById) {
+    return NextResponse.json({ valid: false });
+  }
+
+  if (inviteCode.expiresAt && inviteCode.expiresAt < new Date()) {
+    return NextResponse.json({ valid: false });
+  }
+
+  return NextResponse.json({ valid: true });
+}

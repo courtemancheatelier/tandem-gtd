@@ -1,0 +1,86 @@
+# =============================================================================
+# Tandem GTD — Production Docker Compose
+# =============================================================================
+# Services:
+#   app   — Next.js application (standalone build)
+#   db    — PostgreSQL 16 database
+#   caddy — Reverse proxy with automatic HTTPS
+# =============================================================================
+
+services:
+  # ---------------------------------------------------------------------------
+  # PostgreSQL 16
+  # ---------------------------------------------------------------------------
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-tandem}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
+      POSTGRES_DB: ${POSTGRES_DB:-tandem}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-tandem} -d ${POSTGRES_DB:-tandem}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - tandem-net
+
+  # ---------------------------------------------------------------------------
+  # Tandem GTD — Next.js Application
+  # ---------------------------------------------------------------------------
+  app:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-tandem}:${POSTGRES_PASSWORD:-password}@db:5432/${POSTGRES_DB:-tandem}
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3000/api/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - tandem-net
+
+  # ---------------------------------------------------------------------------
+  # Caddy — Reverse proxy with automatic HTTPS
+  # ---------------------------------------------------------------------------
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    depends_on:
+      app:
+        condition: service_healthy
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - tandem-net
+
+volumes:
+  pgdata:
+    name: tandem-pgdata
+  caddy_data:
+    name: tandem-caddy-data
+  caddy_config:
+    name: tandem-caddy-config
+
+networks:
+  tandem-net:
+    name: tandem-net

@@ -1,0 +1,229 @@
+/* Tiptap Editor Styles — matches WikiMarkdownRenderer styling */
+
+.tiptap-editor .tiptap {
+  outline: none;
+  min-height: 300px;
+  padding: 0.75rem 1rem;
+}
+
+.tiptap-editor .tiptap:focus {
+  outline: none;
+}
+
+/* Headings */
+.tiptap-editor h1 {
+  font-size: 1.5rem;
+  line-height: 2rem;
+  font-weight: 700;
+  margin-top: 1.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.tiptap-editor h2 {
+  font-size: 1.25rem;
+  line-height: 1.75rem;
+  font-weight: 600;
+  margin-top: 1.25rem;
+  margin-bottom: 0.5rem;
+}
+
+.tiptap-editor h3 {
+  font-size: 1.125rem;
+  line-height: 1.75rem;
+  font-weight: 600;
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+/* Paragraphs */
+.tiptap-editor p {
+  margin-bottom: 0.75rem;
+  line-height: 1.625;
+}
+
+/* Lists */
+.tiptap-editor ul {
+  list-style-type: disc;
+  padding-left: 1.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.tiptap-editor ol {
+  list-style-type: decimal;
+  padding-left: 1.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.tiptap-editor li {
+  line-height: 1.625;
+}
+
+.tiptap-editor li > p {
+  margin-bottom: 0.25rem;
+}
+
+/* Task lists */
+.tiptap-editor ul[data-type="taskList"] {
+  list-style: none;
+  padding-left: 0;
+}
+
+.tiptap-editor ul[data-type="taskList"] li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.tiptap-editor ul[data-type="taskList"] li > label {
+  flex-shrink: 0;
+  margin-top: 0.25rem;
+}
+
+.tiptap-editor ul[data-type="taskList"] li > label input[type="checkbox"] {
+  cursor: pointer;
+}
+
+.tiptap-editor ul[data-type="taskList"] li > div {
+  flex: 1;
+}
+
+.tiptap-editor ul[data-type="taskList"] li[data-checked="true"] > div > p {
+  text-decoration: line-through;
+  color: hsl(var(--muted-foreground));
+}
+
+/* Blockquotes */
+.tiptap-editor blockquote {
+  border-left: 4px solid hsl(var(--muted-foreground) / 0.3);
+  padding-left: 1rem;
+  font-style: italic;
+  color: hsl(var(--muted-foreground));
+  margin-bottom: 0.75rem;
+}
+
+/* Code */
+.tiptap-editor code {
+  background-color: hsl(var(--muted));
+  padding: 0.125rem 0.375rem;
+  border-radius: 0.25rem;
+  font-size: 0.875rem;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+}
+
+.tiptap-editor pre {
+  background-color: hsl(var(--muted));
+  padding: 1rem;
+  border-radius: 0.375rem;
+  overflow-x: auto;
+  margin-bottom: 0.75rem;
+  font-size: 0.875rem;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+}
+
+.tiptap-editor pre code {
+  background: none;
+  padding: 0;
+  border-radius: 0;
+  font-size: inherit;
+}
+
+/* Links */
+.tiptap-editor a {
+  color: hsl(var(--primary));
+  text-decoration: underline;
+}
+
+.tiptap-editor a:hover {
+  color: hsl(var(--primary) / 0.8);
+}
+
+/* Tables */
+.tiptap-editor table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 0.75rem 0;
+  overflow: hidden;
+  table-layout: fixed;
+}
+
+.tiptap-editor th,
+.tiptap-editor td {
+  border: 1px solid hsl(var(--border));
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+  vertical-align: top;
+  min-width: 80px;
+  position: relative;
+}
+
+.tiptap-editor th {
+  background: hsl(var(--muted));
+  font-weight: 600;
+}
+
+.tiptap-editor th > p,
+.tiptap-editor td > p {
+  margin-bottom: 0;
+}
+
+/* Selected cell */
+.tiptap-editor .selectedCell::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: hsl(var(--primary) / 0.1);
+  pointer-events: none;
+}
+
+/* HR */
+.tiptap-editor hr {
+  border: none;
+  border-top: 1px solid hsl(var(--border));
+  margin: 1.5rem 0;
+}
+
+/* Images */
+.tiptap-editor img {
+  max-width: 100%;
+  border-radius: 0.375rem;
+  margin: 0.75rem 0;
+}
+
+/* Wiki links in editor */
+.tiptap-editor [data-wiki-link] {
+  color: hsl(var(--primary));
+  text-decoration: underline;
+  text-decoration-style: solid;
+  cursor: pointer;
+  border-radius: 2px;
+  padding: 0 2px;
+}
+
+.tiptap-editor [data-wiki-link]:hover {
+  background: hsl(var(--primary) / 0.1);
+}
+
+/* Placeholder */
+.tiptap-editor p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  color: hsl(var(--muted-foreground));
+  pointer-events: none;
+  float: left;
+  height: 0;
+}
+
+/* Highlight */
+.tiptap-editor mark {
+  background-color: hsl(50 100% 70% / 0.5);
+  border-radius: 2px;
+  padding: 0 2px;
+}
+
+:is(.dark) .tiptap-editor mark {
+  background-color: hsl(50 80% 40% / 0.3);
+}
+
+/* Gapcursor for tables */
+.tiptap-editor .ProseMirror-gapcursor::after {
+  border-top: 1px solid hsl(var(--foreground));
+}

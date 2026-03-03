@@ -1,0 +1,47 @@
+# =============================================================================
+# Tandem GTD — Development Docker Compose Override
+# =============================================================================
+# Usage:
+#   docker compose -f docker-compose.yml -f docker-compose.dev.yml up
+#
+# Mounts source code for hot-reload, exposes port 3000 directly (no Caddy).
+# =============================================================================
+
+services:
+  # ---------------------------------------------------------------------------
+  # Tandem GTD — Development mode with hot-reload
+  # ---------------------------------------------------------------------------
+  app:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+      target: deps
+    command: sh -c "/app/deploy/dev-entrypoint.sh"
+    volumes:
+      - ../src:/app/src
+      - ../public:/app/public
+      - ../prisma:/app/prisma
+      - ../next.config.js:/app/next.config.js
+      - ../tailwind.config.ts:/app/tailwind.config.ts
+      - ../tsconfig.json:/app/tsconfig.json
+      - ../postcss.config.mjs:/app/postcss.config.mjs
+      - ../components.json:/app/components.json
+      - ../docs:/app/docs
+      - ../deploy:/app/deploy
+    ports:
+      - "2000:2000"
+    environment:
+      NODE_ENV: development
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:2000/api/health || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  # ---------------------------------------------------------------------------
+  # Caddy — disabled in development
+  # ---------------------------------------------------------------------------
+  caddy:
+    profiles:
+      - disabled

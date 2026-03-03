@@ -1,0 +1,63 @@
+title: Hire Someone
+description: >
+  End-to-end hiring checklist from defining the role to onboarding.
+  Covers sourcing, interviewing, and offer management.
+type: SEQUENTIAL
+outcome: "{role} for {department} is hired and onboarded"
+icon: user-plus
+variables:
+  - role
+  - department
+
+tasks:
+  - title: "Define {role} requirements and responsibilities"
+    notes: "Write job description, required skills, experience level, salary range"
+    estimatedMins: 60
+    energyLevel: HIGH
+    contextName: "@Computer"
+
+  - title: "Post {role} position on job boards"
+    notes: "LinkedIn, Indeed, relevant industry boards"
+    estimatedMins: 30
+    energyLevel: MEDIUM
+    contextName: "@Computer"
+
+  - title: "Review incoming applications for {role}"
+    estimatedMins: 45
+    energyLevel: MEDIUM
+    contextName: "@Computer"
+
+  - title: "Schedule phone screens with top candidates"
+    estimatedMins: 20
+    energyLevel: LOW
+    contextName: "@Computer"
+
+  - title: "Conduct phone screens"
+    estimatedMins: 90
+    energyLevel: HIGH
+    contextName: "@Phone"
+
+  - title: "Schedule on-site or video interviews"
+    estimatedMins: 20
+    energyLevel: LOW
+    contextName: "@Computer"
+
+  - title: "Conduct interviews and collect feedback"
+    estimatedMins: 120
+    energyLevel: HIGH
+
+  - title: "Check references for final candidate"
+    estimatedMins: 30
+    energyLevel: MEDIUM
+    contextName: "@Phone"
+
+  - title: "Prepare and send offer letter for {role}"
+    estimatedMins: 30
+    energyLevel: MEDIUM
+    contextName: "@Computer"
+
+  - title: "Set up onboarding for new {role} in {department}"
+    notes: "Equipment, accounts, welcome materials, first-week schedule"
+    estimatedMins: 45
+    energyLevel: MEDIUM
+    contextName: "@Computer"

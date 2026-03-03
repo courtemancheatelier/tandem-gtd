@@ -1,0 +1,12 @@
+# Backup data — never commit actual backups
+*.gpg
+*.sha256
+*.pg_dump
+*.tar.gz
+*.gz
+dr.log
+verify.log
+daily/
+weekly/
+wal/
+wal-base/

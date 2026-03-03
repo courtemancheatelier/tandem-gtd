@@ -1,0 +1,10 @@
+[Unit]
+Description=Tandem recurring task generation cron job
+After=network.target tandem.service
+
+[Service]
+Type=oneshot
+User=tandem
+EnvironmentFile=/opt/tandem/.env
+ExecStart=/bin/bash -c '/usr/bin/curl -sf -X POST -H "Authorization: Bearer $CRON_SECRET" http://localhost:2000/api/cron/recurring'
+TimeoutStartSec=30
