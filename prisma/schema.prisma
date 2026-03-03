@@ -1,0 +1,1421 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================================
+// ENUMS
+// ============================================================================
+
+enum GoalStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  ACHIEVED
+  DEFERRED
+}
+
+enum HorizonLevel {
+  RUNWAY      // Current actions
+  HORIZON_1   // Current projects
+  HORIZON_2   // Areas of focus
+  HORIZON_3   // 1-2 year goals
+  HORIZON_4   // 3-5 year vision
+  HORIZON_5   // Life purpose
+}
+
+enum ProjectStatus {
+  ACTIVE
+  ON_HOLD
+  COMPLETED
+  DROPPED
+  SOMEDAY_MAYBE
+}
+
+enum ProjectType {
+  SEQUENTIAL      // Tasks must be done in order
+  PARALLEL        // All tasks available at once
+  SINGLE_ACTIONS  // Container for one-off tasks
+}
+
+enum ChildType {
+  SEQUENTIAL    // Sub-projects activate one at a time, in sortOrder
+  PARALLEL      // All sub-projects are active simultaneously
+}
+
+enum TaskStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  WAITING
+  COMPLETED
+  DROPPED
+}
+
+enum EnergyLevel {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum InboxItemStatus {
+  UNPROCESSED
+  PROCESSED
+  DELETED
+}
+
+enum ReviewStatus {
+  IN_PROGRESS
+  COMPLETED
+}
+
+enum HorizonReviewType {
+  INITIAL_SETUP
+  QUARTERLY
+  ANNUAL
+}
+
+enum VelocityUnit {
+  TASKS
+  HOURS
+  AUTO
+}
+
+enum ProjectRole {
+  OWNER
+  COLLABORATOR
+  VIEWER
+}
+
+// ============================================================================
+// HISTORY / EVENT SOURCING ENUMS
+// ============================================================================
+
+enum TaskEventType {
+  CREATED
+  UPDATED
+  STATUS_CHANGED
+  COMPLETED
+  REOPENED
+  MOVED_TO_PROJECT
+  REMOVED_FROM_PROJECT
+  DELEGATED
+  DELEGATION_ACCEPTED
+  DELEGATION_DECLINED
+  DEFERRED
+  ACTIVATED
+  CONTEXT_CHANGED
+  DEPENDENCY_ADDED
+  DEPENDENCY_REMOVED
+  UNBLOCKED
+  PROMOTED
+  ARCHIVED
+  RESTORED
+  COMMENTED
+}
+
+enum ProjectEventType {
+  CREATED
+  UPDATED
+  COMPLETED
+  REACTIVATED
+  TASK_ADDED
+  TASK_REMOVED
+  TASK_REORDERED
+  NEXT_ACTION_ADVANCED
+  STALLED
+  SHARED
+  UNSHARED
+  ARCHIVED
+  RESTORED
+  CHILD_ACTIVATED
+  CHILDREN_REORDERED
+  RETENTION_WARNING
+}
+
+enum InboxEventType {
+  CAPTURED
+  PROCESSED
+  MERGED
+}
+
+enum ActorType {
+  USER
+  SYSTEM
+  AI
+}
+
+enum EventSource {
+  MANUAL
+  MCP
+  AI_EMBED
+  CASCADE
+  SCHEDULER
+  API
+  IMPORT
+}
+
+enum ImportJobStatus {
+  PENDING           // File uploaded, awaiting preview/confirmation
+  PREVIEWING        // Parsing file, generating preview
+  AWAITING_CONFIRM  // Preview ready, waiting for user to confirm
+  PROCESSING        // Import in progress
+  COMPLETED         // Import finished successfully
+  FAILED            // Import failed (see errors)
+  CANCELLED         // User cancelled after preview
+}
+
+enum SnapshotReason {
+  COMPLETION
+  WEEKLY_REVIEW
+  BULK_OPERATION
+  MANUAL
+  REVERT_POINT
+}
+
+// AI privacy level for individual items
+enum AIVisibility {
+  VISIBLE    // AI can read and reference this item (default)
+  HIDDEN     // AI cannot see this item in any context
+  READ_ONLY  // AI can see it for context but cannot modify it
+}
+
+enum DependencyType {
+  FINISH_TO_START
+  START_TO_START
+  FINISH_TO_FINISH
+  START_TO_FINISH
+}
+
+enum LandingMode {
+  FLAGSHIP   // tandemgtd.com — full marketing site
+  OPERATOR   // Operator instance — custom branding with "Powered by Tandem" footer
+}
+
+enum RegistrationMode {
+  CLOSED       // No new signups allowed
+  WAITLIST     // New OAuth signups go to waitlist
+  INVITE_ONLY  // New signups require a valid invite code
+  OPEN         // New OAuth signups auto-create accounts
+  TRIAL        // New OAuth signups get time-limited trial accounts
+}
+
+enum AuthMode {
+  OAUTH_ONLY             // Only OAuth sign-in allowed
+  OAUTH_AND_CREDENTIALS  // Both OAuth and email/password allowed
+}
+
+enum UserTier {
+  WAITLIST
+  ALPHA
+  BETA
+  GENERAL
+}
+
+enum WaitlistStatus {
+  PENDING   // Waiting for admin approval
+  PROMOTED  // Admin created their account
+  DECLINED  // Admin declined
+}
+
+enum TeamRole {
+  ADMIN
+  MEMBER
+}
+
+enum TeamEventType {
+  CREATED
+  UPDATED
+  DELETED
+  MEMBER_ADDED
+  MEMBER_REMOVED
+  MEMBER_ROLE_CHANGED
+}
+
+enum NotificationType {
+  TASK_DUE_TODAY
+  TASK_OVERDUE
+  TASK_DUE_TOMORROW
+  WEEKLY_REVIEW_REMINDER
+  DAILY_DIGEST
+  HORIZON_REVIEW_DUE
+  SYSTEM
+  TRIAL_WELCOME
+  TRIAL_REMINDER
+  RETENTION_WARNING
+}
+
+// ============================================================================
+// AUTH
+// ============================================================================
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String?  // Null for OAuth-only users
+  name      String
+  isAdmin    Boolean  @default(false)
+  isDisabled Boolean  @default(false)
+  tier          UserTier  @default(WAITLIST)
+  invitedById   String?   @map("invited_by_id")
+  invitedBy     User?     @relation("UserInvites", fields: [invitedById], references: [id])
+  invitees      User[]    @relation("UserInvites")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // AI Integration
+  anthropicApiKey    String?  // Encrypted. User's own API key (takes priority over server key)
+  aiEnabled          Boolean  @default(true) // User can opt out of ALL AI features
+  inAppAiEnabled     Boolean  @default(true) // Sub-master for all in-app AI (chat + features)
+  inAppAiChatEnabled     Boolean  @default(true)
+  inAppAiFeaturesEnabled Boolean  @default(true)
+  aiDailyLimit       Int?     // Override server default for this user
+  aiMessagesUsedToday Int     @default(0)
+  aiLimitResetAt     DateTime?
+
+  // AI Privacy Controls
+  aiCanReadTasks     Boolean  @default(true)  // AI can see user's tasks
+  aiCanReadProjects  Boolean  @default(true)  // AI can see user's projects
+  aiCanReadInbox     Boolean  @default(true)  // AI can see user's inbox
+  aiCanReadNotes     Boolean  @default(true)  // AI can see notes/wiki content
+  aiCanModify        Boolean  @default(true)  // AI can create/edit (vs read-only)
+  aiDefaultVisibility AIVisibility @default(VISIBLE) // Default for new items
+  mcpEnabled         Boolean      @default(true)     // User-level MCP toggle
+
+  // Relations
+  accounts           Account[]
+  areas              Area[]
+  goals              Goal[]
+  horizonNotes       HorizonNote[]
+  projects           Project[]
+  tasks              Task[]
+  contexts           Context[]
+  inboxItems         InboxItem[]
+  waitingFors        WaitingFor[]
+  wikiArticles       WikiArticle[]
+  wikiVersionEdits   WikiArticleVersion[] @relation("WikiVersionActor")
+  helpArticleEdits   HelpArticle[]
+  recurringTemplates RecurringTemplate[]
+  projectTemplates   ProjectTemplate[]
+  weeklyReviews      WeeklyReview[]
+  horizonReviews     HorizonReview[]
+  projectMemberships ProjectMember[]
+  assignedTasks      Task[]         @relation("AssignedTasks")
+  apiTokens          ApiToken[]
+  importJobs         ImportJob[]
+
+  // History (as actor)
+  taskEvents         TaskEvent[]
+  projectEvents      ProjectEvent[]
+  inboxEvents        InboxEvent[]
+  teamEvents         TeamEvent[]    @relation("TeamEvents")
+
+  // Baselines
+  baselines          BaselineSnapshot[]
+
+  // Teams
+  teamMemberships    TeamMember[]
+  teamsCreated       Team[]         @relation("TeamsCreated")
+
+  // OAuth
+  oauthAuthCodes     OAuthAuthorizationCode[]
+  oauthAccessTokens  OAuthAccessToken[]
+  oauthRefreshTokens OAuthRefreshToken[]
+
+  // Trial
+  isTrial            Boolean   @default(false)
+  trialStartedAt     DateTime?
+  trialExpiresAt     DateTime?
+  firstLoginAt       DateTime?
+  lastLoginAt        DateTime?
+  loginCount         Int       @default(0)
+
+  // Onboarding
+  onboardingCompletedAt DateTime?
+
+  // Waitlist
+  waitlistEntry      WaitlistEntry?
+
+  // Invite codes
+  inviteCodesCreated InviteCode[] @relation("InviteCodesCreated")
+  inviteCodeUsed     InviteCode?  @relation("InviteCodeUsed")
+
+  // Notifications
+  pushSubscriptions        PushSubscription[]
+  notifications            Notification[]
+  notificationPreference   NotificationPreference?
+
+  // Password setup
+  passwordSetupToken       PasswordSetupToken?
+
+  // Trial interest
+  trialInterest            TrialInterest?
+
+  @@index([tier])
+  @@index([invitedById])
+  @@index([isTrial])
+  @@index([trialExpiresAt])
+  @@index([lastLoginAt])
+}
+
+// OAuth provider accounts (Google, Apple, etc.)
+model Account {
+  id                String  @id @default(cuid())
+  provider          String  // "google", "apple"
+  providerAccountId String  // Provider's unique user ID
+  accessToken       String? @db.Text
+  refreshToken      String? @db.Text
+  expiresAt         Int?    // Token expiry as Unix timestamp
+  tokenType         String?
+  scope             String?
+  idToken           String? @db.Text
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+// Personal access tokens for MCP server auth
+model ApiToken {
+  id        String   @id @default(cuid())
+  name      String   // e.g. "Claude Desktop", "Claude Code"
+  token     String   @unique // Hashed token (bcrypt)
+  prefix    String   // First 8 chars of plain token, for identification
+  scopes    String[] @default([])  // e.g. ["read", "write"]
+  lastUsed  DateTime?
+  expiresAt DateTime?
+  revokedAt DateTime?
+  createdAt DateTime @default(now())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([token])
+  @@index([prefix])
+  @@index([userId])
+}
+
+// Server-wide settings (single row, managed by admin)
+model ServerSettings {
+  id                     String  @id @default("singleton")
+  serverAnthropicApiKey  String? // Encrypted. Shared API key for all users
+  serverAiEnabled        Boolean @default(false) // Must be explicitly enabled
+  allowUserOwnKeys       Boolean @default(true)  // Let users bring their own keys
+  shareServerKey         Boolean @default(false)  // Let non-admin users use the server key
+  defaultAiDailyLimit    Int     @default(100)    // Default daily message limit per user
+  defaultAiModel         String  @default("claude-sonnet-4-20250514")
+  mcpEnabled             Boolean @default(true)
+  serverInAppAiEnabled   Boolean @default(true)  // Server-level in-app AI chat toggle
+  allowUserAiToggle      Boolean @default(true)  // Let users opt out of AI entirely
+  allowUserInAppAiToggle Boolean @default(true)  // Let users toggle in-app AI chat
+  allowUserMcpToggle     Boolean @default(true)  // Let users toggle MCP access
+  teamsEnabled           Boolean @default(true)
+  teamsAdminOnly         Boolean @default(true)
+  apiAccessEnabled       Boolean @default(false)  // Allow Bearer token auth on REST API routes
+  landingEnabled         Boolean @default(true)   // Show public landing page at / for unauthenticated visitors
+  registrationMode       RegistrationMode @default(WAITLIST)
+  authMode               AuthMode         @default(OAUTH_AND_CREDENTIALS)
+  maxInviteCodesPerUser  Int      @default(2)
+  trialDurationDays      Int      @default(30)
+
+  // ── Instance Branding ──
+  landingMode        LandingMode @default(OPERATOR)
+  instanceName       String      @default("Tandem GTD")
+  instanceTagline    String      @default("A self-hosted GTD app that actually does GTD.")
+  instanceDesc       String?     @db.Text
+  instanceLogoUrl    String?
+  accentColor        String      @default("#6366f1")
+  operatorName       String?
+  operatorUrl        String?
+
+  // ── Content Blocks ──
+  heroHeading        String?
+  heroDescription    String?     @db.Text
+  featureHighlights  String?     @db.Text  // JSON array of {title, description, icon}
+  ctaHeading         String?
+  ctaDescription     String?
+  ctaButtonText      String?
+  ctaButtonUrl       String?
+
+  // ── Operator Support ──
+  supportUrl         String?
+
+  // ── SMTP / Email ──
+  smtpHost           String?
+  smtpPort           Int?
+  smtpUser           String?
+  smtpPass           String?  // Encrypted
+  smtpFrom           String?
+  smtpSecure         Boolean  @default(true)
+
+  // ── Email Templates ──
+  emailWaitlistSubject   String?
+  emailWaitlistBody      String?  @db.Text
+  emailWelcomeSubject    String?
+  emailWelcomeBody       String?  @db.Text
+
+  // ── Data Retention ──
+  retentionEnabled         Boolean @default(false)
+  retentionPeriodDays      Int     @default(180)
+  retentionGraceDays       Int     @default(30)
+  retentionExportPath      String?
+  retentionExportKeepDays  Int     @default(90)
+  retentionStandaloneTasks Boolean @default(true)
+  retentionBatchSize       Int     @default(10)
+
+  updatedAt              DateTime @updatedAt
+}
+
+model RetentionLog {
+  id           String   @id @default(cuid())
+  action       String   // SCHEDULED, PURGED, CANCELLED, EXPORT_CLEANED, STANDALONE_PURGED
+  projectId    String?
+  projectTitle String?
+  taskCount    Int      @default(0)
+  eventCount   Int      @default(0)
+  exportPath   String?
+  actorType    ActorType @default(SYSTEM)
+  actorId      String?
+  details      Json?
+  createdAt    DateTime @default(now())
+
+  @@index([action, createdAt])
+  @@index([projectId])
+}
+
+model WaitlistEntry {
+  id                String         @id @default(cuid())
+  email             String         @unique
+  name              String
+  provider          String
+  providerAccountId String
+  status            WaitlistStatus @default(PENDING)
+  promotedUserId    String?        @unique
+  promotedUser      User?          @relation(fields: [promotedUserId], references: [id], onDelete: SetNull)
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+
+  @@unique([provider, providerAccountId])
+}
+
+model InviteCode {
+  id          String    @id @default(cuid())
+  code        String    @unique
+  createdById String    @map("created_by_id")
+  createdBy   User      @relation("InviteCodesCreated", fields: [createdById], references: [id], onDelete: Cascade)
+  usedById    String?   @unique @map("used_by_id")
+  usedBy      User?     @relation("InviteCodeUsed", fields: [usedById], references: [id], onDelete: SetNull)
+  usedAt      DateTime?
+  expiresAt   DateTime?
+  tier        UserTier  @default(BETA)
+  createdAt   DateTime  @default(now())
+
+  @@index([code])
+  @@index([createdById])
+}
+
+model AllowedDomain {
+  id        String   @id @default(cuid())
+  domain    String   @unique
+  tier      UserTier @default(BETA)
+  note      String?
+  createdAt DateTime @default(now())
+
+  @@index([domain])
+}
+
+model EmailSubscriber {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  createdAt DateTime @default(now())
+}
+
+model TrialInterest {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  userId    String?  @unique
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  source    String   @default("trial-ended") // e.g. "trial-ended", "banner"
+  createdAt DateTime @default(now())
+}
+
+// Survives account deletion — prevents trial re-signup
+model TrialUsage {
+  id                String   @id @default(cuid())
+  email             String   @unique
+  provider          String
+  providerAccountId String
+  createdAt         DateTime @default(now())
+
+  @@index([provider, providerAccountId])
+}
+
+// ============================================================================
+// HORIZONS OF FOCUS
+// ============================================================================
+
+model Area {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  isActive    Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  userId   String
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  projects Project[]
+  goals    Goal[]
+  recurringTemplates RecurringTemplate[]
+
+  @@index([userId])
+}
+
+model Goal {
+  id          String     @id @default(cuid())
+  title       String
+  description String?
+  status      GoalStatus @default(NOT_STARTED)
+  horizon     HorizonLevel @default(HORIZON_3)
+  targetDate  DateTime?
+  progress    Int        @default(0) // 0-100
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  userId   String
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  areaId   String?
+  area     Area?    @relation(fields: [areaId], references: [id], onDelete: SetNull)
+  projects Project[]
+  recurringTemplates RecurringTemplate[]
+
+  @@index([userId])
+  @@index([areaId])
+}
+
+model HorizonNote {
+  id        String       @id @default(cuid())
+  level     HorizonLevel
+  title     String
+  content   String       @db.Text
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+// ============================================================================
+// PROJECTS
+// ============================================================================
+
+model Project {
+  id            String        @id @default(cuid())
+  title         String
+  description   String?       @db.Text
+  status        ProjectStatus @default(ACTIVE)
+  type          ProjectType   @default(SEQUENTIAL)
+  childType     ChildType     @default(SEQUENTIAL) @map("child_type")
+  outcome       String?       // Desired outcome statement
+  targetDate    DateTime?     @map("target_date")
+  velocityUnit  VelocityUnit  @default(AUTO) @map("velocity_unit")
+  sortOrder     Int           @default(0)
+  isSomedayMaybe Boolean      @default(false)
+  completedAt   DateTime?
+  version       Int           @default(1)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  // Data retention
+  retentionExempt    Boolean   @default(false)
+  purgeScheduledAt   DateTime?
+
+  userId  String
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  areaId  String?
+  area    Area?   @relation(fields: [areaId], references: [id], onDelete: SetNull)
+  goalId  String?
+  goal    Goal?   @relation(fields: [goalId], references: [id], onDelete: SetNull)
+
+  // Team ownership
+  teamId  String? @map("team_id")
+  team    Team?   @relation(fields: [teamId], references: [id], onDelete: SetNull)
+
+  // AI privacy — per-item override
+  aiVisibility  AIVisibility @default(VISIBLE)
+
+  // Sub-project hierarchy
+  depth          Int            @default(0)
+  path           String         @default("")
+  rollupProgress Float?         @map("rollup_progress")
+  rollupStatus   ProjectStatus? @map("rollup_status")
+
+  parentProjectId String?        @map("parent_project_id")
+  parentProject   Project?       @relation("ProjectChildren", fields: [parentProjectId], references: [id], onDelete: SetNull)
+  childProjects   Project[]      @relation("ProjectChildren")
+
+  tasks      Task[]
+  members    ProjectMember[]
+  events     ProjectEvent[]
+  baselines  BaselineSnapshot[]
+
+  @@index([userId])
+  @@index([areaId])
+  @@index([goalId])
+  @@index([status])
+  @@index([parentProjectId])
+  @@index([teamId])
+  @@index([status, completedAt, retentionExempt, purgeScheduledAt])
+}
+
+// ============================================================================
+// TASKS
+// ============================================================================
+
+model Task {
+  id            String      @id @default(cuid())
+  title         String
+  notes         String?     @db.Text
+  status        TaskStatus  @default(NOT_STARTED)
+  isNextAction  Boolean     @default(false)
+  estimatedMins Int?
+  energyLevel   EnergyLevel?
+  scheduledDate DateTime?   // Tickler / defer date
+  dueDate       DateTime?
+  sortOrder     Int         @default(0)
+  completedAt   DateTime?
+  version       Int         @default(1)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  // AI privacy — per-item override
+  aiVisibility  AIVisibility @default(VISIBLE)
+
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  projectId   String?
+  project     Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  contextId   String?
+  context     Context? @relation(fields: [contextId], references: [id], onDelete: SetNull)
+  assignedToId String?
+  assignedTo  User?    @relation("AssignedTasks", fields: [assignedToId], references: [id], onDelete: SetNull)
+
+  // PM fields
+  isMilestone     Boolean  @default(false) @map("is_milestone")
+  percentComplete Int      @default(0)     @map("percent_complete")
+  actualMinutes   Int?     @map("actual_minutes")
+
+  // Explicit dependency relations
+  predecessors  TaskDependency[] @relation("Successor")
+  successors    TaskDependency[] @relation("Predecessor")
+
+  // History
+  events     TaskEvent[]
+  snapshots  TaskSnapshot[]
+
+  // Notifications
+  notifications Notification[]
+
+  // Recurring template link (for recycling on completion)
+  recurringTemplateId String?
+  recurringTemplate   RecurringTemplate? @relation(fields: [recurringTemplateId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([projectId])
+  @@index([contextId])
+  @@index([status])
+  @@index([isNextAction])
+  @@index([scheduledDate])
+  @@index([recurringTemplateId])
+}
+
+// ============================================================================
+// CONTEXTS
+// ============================================================================
+
+model Context {
+  id        String   @id @default(cuid())
+  name      String   // e.g. "@home", "@office", "@phone", "@errands"
+  color     String?  // Hex color for UI
+  icon      String?  // Lucide icon name
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tasks  Task[]
+
+  @@unique([userId, name])
+  @@index([userId])
+}
+
+// ============================================================================
+// GTD WORKFLOW
+// ============================================================================
+
+model InboxItem {
+  id        String          @id @default(cuid())
+  content   String
+  notes     String?         @db.Text
+  status    InboxItemStatus @default(UNPROCESSED)
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+
+  // AI privacy — per-item override
+  aiVisibility  AIVisibility @default(VISIBLE)
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  events InboxEvent[]
+
+  @@index([userId])
+  @@index([status])
+}
+
+model WaitingFor {
+  id          String    @id @default(cuid())
+  description String
+  person      String    // Who are we waiting on
+  dueDate     DateTime?
+  followUpDate DateTime?
+  isResolved  Boolean   @default(false)
+  resolvedAt  DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([isResolved])
+}
+
+model WikiArticle {
+  id        String   @id @default(cuid())
+  title     String
+  slug      String
+  content   String   @db.Text
+  tags      String[] // Array of tag strings
+  version   Int      @default(1)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Full-text search vector (managed by DB trigger, not Prisma)
+  searchVector Unsupported("tsvector")? @map("search_vector")
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  teamId  String?  @map("team_id")
+  team    Team?    @relation(fields: [teamId], references: [id], onDelete: SetNull)
+
+  versions          WikiArticleVersion[]
+  outgoingBacklinks WikiBacklink[] @relation("BacklinkSource")
+  incomingBacklinks WikiBacklink[] @relation("BacklinkTarget")
+
+  @@unique([userId, slug])
+  @@unique([teamId, slug])
+  @@index([userId])
+  @@index([teamId])
+  @@index([tags], type: Gin)
+}
+
+model WikiBacklink {
+  id              String      @id @default(cuid())
+  sourceArticleId String
+  targetArticleId String
+  sourceArticle   WikiArticle @relation("BacklinkSource", fields: [sourceArticleId], references: [id], onDelete: Cascade)
+  targetArticle   WikiArticle @relation("BacklinkTarget", fields: [targetArticleId], references: [id], onDelete: Cascade)
+
+  @@unique([sourceArticleId, targetArticleId])
+  @@index([targetArticleId])
+  @@index([sourceArticleId])
+}
+
+model WikiArticleVersion {
+  id        String   @id @default(cuid())
+  version   Int
+  title     String
+  content   String   @db.Text
+  tags      String[]
+  message   String?
+  createdAt DateTime @default(now())
+
+  articleId String
+  article   WikiArticle @relation(fields: [articleId], references: [id], onDelete: Cascade)
+
+  actorId   String?
+  actor     User?    @relation("WikiVersionActor", fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@unique([articleId, version])
+  @@index([articleId])
+}
+
+model HelpArticle {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  title       String
+  content     String   @db.Text
+  category    String
+  tags        String[]
+  sortOrder   Int      @default(0)
+  adminOnly   Boolean  @default(false)
+  isPublished Boolean  @default(true)
+
+  // Seed tracking
+  sourceFile  String?  @unique
+  sourceHash  String?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Last editor (for admin UI edits)
+  lastEditedById String?
+  lastEditedBy   User?   @relation(fields: [lastEditedById], references: [id], onDelete: SetNull)
+
+  @@index([category])
+  @@index([sourceFile])
+}
+
+model RecurringTemplate {
+  id            String   @id @default(cuid())
+  title         String
+  description   String?
+  cronExpression String  // e.g. "weekly:1" (every Monday)
+  taskDefaults  Json?    // Default values for generated tasks
+  isActive      Boolean  @default(true)
+  lastGenerated DateTime?
+  nextDue       DateTime?
+  color         String?  // Hex color for card file view
+  estimatedMins Int?     // Time estimate for card file view
+  skipStreak    Int      @default(0) // Consecutive skips (SHE pencil marks)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  areaId String?
+  area   Area?  @relation(fields: [areaId], references: [id], onDelete: SetNull)
+  goalId String?
+  goal   Goal?  @relation(fields: [goalId], references: [id], onDelete: SetNull)
+
+  tasks  Task[]
+
+  @@index([userId])
+  @@index([isActive])
+}
+
+model WeeklyReview {
+  id          String       @id @default(cuid())
+  status      ReviewStatus @default(IN_PROGRESS)
+  weekOf      DateTime     // The Monday of the review week
+  notes       String?      @db.Text
+  checklist    Json?        // Tracks which steps are completed
+  completedAt  DateTime?
+  aiCoachUsed  Boolean      @default(false)
+  aiSummary    String?      @db.Text
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([weekOf])
+}
+
+model HorizonReview {
+  id          String              @id @default(cuid())
+  type        HorizonReviewType
+  status      ReviewStatus        @default(IN_PROGRESS)
+  checklist   Json?
+  notes       Json?
+  completedAt DateTime?
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([type])
+}
+
+// ============================================================================
+// PROJECT TEMPLATES
+// ============================================================================
+
+model ProjectTemplate {
+  id          String      @id @default(cuid())
+  title       String
+  description String?     @db.Text
+  type        ProjectType @default(SEQUENTIAL)
+  outcome     String?
+  icon        String?
+
+  // System template tracking (same pattern as HelpArticle)
+  isSystem    Boolean     @default(false)
+  sourceFile  String?     @unique
+  sourceHash  String?
+
+  // User ownership (null for system templates)
+  userId      String?
+  user        User?       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Variable placeholders (e.g., ["destination", "travel_dates"])
+  variables   String[]
+
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  taskTemplates       ProjectTaskTemplate[]
+  subProjectTemplates ProjectSubTemplate[]
+
+  @@index([userId])
+  @@index([isSystem])
+}
+
+model ProjectTaskTemplate {
+  id            String       @id @default(cuid())
+  title         String
+  notes         String?      @db.Text
+  estimatedMins Int?
+  energyLevel   EnergyLevel?
+  sortOrder     Int          @default(0)
+
+  // Context is stored by name (not ID) for portability across users
+  contextName   String?
+
+  templateId    String
+  template      ProjectTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+
+  // Optional: which sub-project this task belongs to (null = top-level project)
+  subProjectTemplateId String? @map("sub_project_template_id")
+  subProjectTemplate   ProjectSubTemplate? @relation(fields: [subProjectTemplateId], references: [id], onDelete: SetNull)
+
+  @@index([templateId])
+  @@index([subProjectTemplateId])
+}
+
+model ProjectSubTemplate {
+  id          String      @id @default(cuid())
+  title       String
+  type        ProjectType @default(SEQUENTIAL)
+  outcome     String?
+  sortOrder   Int         @default(0)
+
+  templateId  String
+  template    ProjectTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+
+  tasks       ProjectTaskTemplate[]
+
+  @@index([templateId])
+}
+
+// ============================================================================
+// IMPORT / EXPORT
+// ============================================================================
+
+model ImportJob {
+  id             String          @id @default(cuid())
+  status         ImportJobStatus @default(PENDING)
+  source         String          // "tandem_json", "todoist_csv", "generic_csv"
+  fileName       String          // Original upload filename
+  totalItems     Int             @default(0)
+  processedItems Int             @default(0)
+  createdItems   Int             @default(0)
+  skippedItems   Int             @default(0)
+  errorCount     Int             @default(0)
+  errors         Json?           // Array of { row: number, field: string, message: string }
+  mapping        Json?           // Column mapping for CSV imports
+  preview        Json?           // Preview data shown before confirmation
+  confirmedAt    DateTime?       // When user confirmed after preview
+  completedAt    DateTime?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([status])
+}
+
+// ============================================================================
+// COLLABORATION
+// ============================================================================
+
+model ProjectMember {
+  id        String      @id @default(cuid())
+  role      ProjectRole @default(COLLABORATOR)
+  createdAt DateTime    @default(now())
+
+  userId    String
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, projectId])
+  @@index([userId])
+  @@index([projectId])
+}
+
+// ============================================================================
+// TEAMS
+// ============================================================================
+
+model Team {
+  id            String   @id @default(cuid())
+  name          String
+  description   String?  @db.Text
+  icon          String?  // Emoji or short icon string
+  parentTeamId  String?  @map("parent_team_id") // v1.2 forward-compat
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  createdById String?  @map("created_by_id")
+  createdBy   User?    @relation("TeamsCreated", fields: [createdById], references: [id], onDelete: SetNull)
+
+  // Self-relation for future hierarchy (v1.2)
+  parentTeam    Team?    @relation("TeamHierarchy", fields: [parentTeamId], references: [id], onDelete: SetNull)
+  childTeams    Team[]   @relation("TeamHierarchy")
+
+  members       TeamMember[]
+  projects      Project[]
+  wikiArticles  WikiArticle[]
+  events        TeamEvent[]
+
+  @@index([createdById])
+  @@index([parentTeamId])
+}
+
+model TeamMember {
+  id       String   @id @default(cuid())
+  role     TeamRole @default(MEMBER)
+  label    String?  // Optional role label (e.g. "Design Lead")
+  joinedAt DateTime @default(now())
+
+  teamId String
+  team   Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([teamId, userId])
+  @@index([userId])
+}
+
+model TeamEvent {
+  id        String        @id @default(cuid())
+  teamId    String
+  team      Team          @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  eventType TeamEventType
+  actorType ActorType     @default(USER)
+  actorId   String?
+  actor     User?         @relation("TeamEvents", fields: [actorId], references: [id], onDelete: SetNull)
+
+  changes   Json
+  message   String?
+  source    EventSource   @default(MANUAL)
+  triggeredBy String?
+
+  createdAt DateTime      @default(now())
+
+  @@index([teamId, createdAt])
+  @@index([actorId, createdAt])
+}
+
+// ============================================================================
+// HISTORY / EVENT SOURCING
+// ============================================================================
+
+model TaskEvent {
+  id          String        @id @default(cuid())
+  taskId      String
+  task        Task          @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  eventType   TaskEventType
+  actorType   ActorType     @default(USER)
+  actorId     String?
+  actor       User?         @relation(fields: [actorId], references: [id], onDelete: SetNull)
+
+  changes     Json          // { field: { old: value, new: value } }
+  message     String?       // Optional commit-message-style note
+  source      EventSource   @default(MANUAL)
+  triggeredBy String?       // ID of the event that caused this (cascade chain)
+
+  createdAt   DateTime      @default(now())
+
+  @@index([taskId, createdAt])
+  @@index([actorId, createdAt])
+  @@index([eventType, createdAt])
+  @@index([triggeredBy])
+}
+
+model ProjectEvent {
+  id          String           @id @default(cuid())
+  projectId   String
+  project     Project          @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  eventType   ProjectEventType
+  actorType   ActorType        @default(USER)
+  actorId     String?
+  actor       User?            @relation(fields: [actorId], references: [id], onDelete: SetNull)
+
+  changes     Json
+  message     String?
+  source      EventSource      @default(MANUAL)
+  triggeredBy String?
+
+  createdAt   DateTime         @default(now())
+
+  @@index([projectId, createdAt])
+  @@index([actorId, createdAt])
+}
+
+model InboxEvent {
+  id          String         @id @default(cuid())
+  inboxItemId String
+  inboxItem   InboxItem      @relation(fields: [inboxItemId], references: [id], onDelete: Cascade)
+
+  eventType   InboxEventType
+  actorType   ActorType      @default(USER)
+  actorId     String?
+  actor       User?          @relation(fields: [actorId], references: [id], onDelete: SetNull)
+
+  changes     Json
+  message     String?
+  source      EventSource    @default(MANUAL)
+
+  createdAt   DateTime       @default(now())
+
+  @@index([inboxItemId, createdAt])
+}
+
+model TaskSnapshot {
+  id         String         @id @default(cuid())
+  taskId     String
+  task       Task           @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  state      Json           // Complete task object as JSON
+  reason     SnapshotReason
+  eventId    String?        // The event that triggered this snapshot
+
+  createdAt  DateTime       @default(now())
+
+  @@index([taskId, createdAt])
+}
+
+// ============================================================================
+// PM FEATURES — EXPLICIT DEPENDENCIES
+// ============================================================================
+
+model TaskDependency {
+  id            String         @id @default(cuid())
+  predecessorId String         @map("predecessor_id")
+  predecessor   Task           @relation("Predecessor", fields: [predecessorId], references: [id], onDelete: Cascade)
+  successorId   String         @map("successor_id")
+  successor     Task           @relation("Successor", fields: [successorId], references: [id], onDelete: Cascade)
+  type          DependencyType @default(FINISH_TO_START)
+  lagMinutes    Int            @default(0) @map("lag_minutes")
+
+  @@unique([predecessorId, successorId])
+  @@index([predecessorId])
+  @@index([successorId])
+  @@map("task_dependencies")
+}
+
+// ============================================================================
+// PM FEATURES — BASELINE SNAPSHOTS
+// ============================================================================
+
+model BaselineSnapshot {
+  id           String   @id @default(cuid())
+  projectId    String   @map("project_id")
+  project      Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  userId       String   @map("user_id")
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name         String
+  snapshotData Json     @map("snapshot_data")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  @@index([projectId])
+  @@map("baseline_snapshots")
+}
+
+// ============================================================================
+// OAUTH 2.1 AUTHORIZATION SERVER
+// ============================================================================
+
+model OAuthClient {
+  id            String   @id @default(cuid())
+  clientId      String   @unique // UUID, public identifier
+  clientSecret  String?  // bcrypt-hashed (null for public clients)
+  clientName    String   @default("Unknown Client")
+  redirectUris  String[] // Registered redirect URIs
+  grantTypes    String[] @default(["authorization_code", "refresh_token"])
+  responseTypes String[] @default(["code"])
+  tokenEndpointAuthMethod String @default("client_secret_post")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  authCodes     OAuthAuthorizationCode[]
+  accessTokens  OAuthAccessToken[]
+  refreshTokens OAuthRefreshToken[]
+
+  @@index([clientId])
+}
+
+model OAuthAuthorizationCode {
+  id                  String   @id @default(cuid())
+  code                String   @unique // bcrypt-hashed authorization code
+  prefix              String   // First 8 chars of raw code, for lookup
+  redirectUri         String   // Must match on exchange
+  scope               String   @default("")
+  codeChallenge       String   // PKCE S256 challenge
+  codeChallengeMethod String   @default("S256")
+  state               String?  // Opaque state from client
+  used                Boolean  @default(false)
+  expiresAt           DateTime // 10-minute expiry
+  createdAt           DateTime @default(now())
+
+  clientId String
+  client   OAuthClient @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  userId   String
+  user     User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([prefix])
+  @@index([clientId])
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model OAuthAccessToken {
+  id        String   @id @default(cuid())
+  token     String   @unique // bcrypt-hashed
+  prefix    String   // First 8 chars for lookup
+  scope     String   @default("")
+  expiresAt DateTime // 1-hour expiry
+  createdAt DateTime @default(now())
+
+  clientId String
+  client   OAuthClient @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  userId   String
+  user     User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([prefix])
+  @@index([clientId])
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model OAuthRefreshToken {
+  id        String   @id @default(cuid())
+  token     String   @unique // bcrypt-hashed
+  prefix    String   // First 8 chars for lookup
+  scope     String   @default("")
+  revoked   Boolean  @default(false)
+  expiresAt DateTime // 30-day expiry
+  createdAt DateTime @default(now())
+
+  clientId String
+  client   OAuthClient @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  userId   String
+  user     User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([prefix])
+  @@index([clientId])
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+// ============================================================================
+// NOTIFICATIONS
+// ============================================================================
+
+model PushSubscription {
+  id        String   @id @default(cuid())
+  endpoint  String   @db.Text
+  p256dh    String
+  auth      String
+  userAgent String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, endpoint])
+  @@index([userId])
+}
+
+model Notification {
+  id          String           @id @default(cuid())
+  type        NotificationType
+  title       String
+  body        String?          @db.Text
+  link        String?
+  isRead      Boolean          @default(false)
+  readAt      DateTime?
+  sentViaPush  Boolean          @default(false)
+  sentViaEmail Boolean          @default(false)
+  createdAt    DateTime         @default(now())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  taskId String?
+  task   Task?  @relation(fields: [taskId], references: [id], onDelete: SetNull)
+
+  @@index([userId, isRead])
+  @@index([userId, createdAt])
+  @@index([taskId])
+}
+
+model NotificationPreference {
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  pushEnabled      Boolean @default(true)
+  pushDueToday     Boolean @default(true)
+  pushDueTomorrow  Boolean @default(false)
+  pushOverdue      Boolean @default(true)
+  pushWeeklyReview Boolean @default(true)
+  pushDailyDigest  Boolean @default(false)
+
+  reminderTimeHour   Int @default(8)
+  reminderTimeMinute Int @default(0)
+  weeklyReviewDay    Int @default(5)
+  quietHoursStart    Int?
+  quietHoursEnd      Int?
+  timezone           String  @default("America/New_York")
+
+  emailEnabled     Boolean @default(false)
+  emailDailyDigest Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model PasswordSetupToken {
+  id        String    @id @default(cuid())
+  userId    String    @unique
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([token])
+}

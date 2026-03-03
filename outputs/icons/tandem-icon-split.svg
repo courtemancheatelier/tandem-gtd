@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bgD" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a"/>
+      <stop offset="100%" stop-color="#0b1120"/>
+    </linearGradient>
+    <linearGradient id="leftG" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#3b82f6"/>
+      <stop offset="100%" stop-color="#1d4ed8"/>
+    </linearGradient>
+    <linearGradient id="rightG" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#7cb8ff"/>
+      <stop offset="100%" stop-color="#3b82f6"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="108" fill="url(#bgD)"/>
+  <!-- Left half -->
+  <path d="
+    M 148 112
+    L 232 112
+    A 12 12 0 0 1 244 124
+    L 244 374
+    A 26 26 0 0 1 218 400
+    A 26 26 0 0 1 192 374
+    L 192 164
+    L 148 164
+    A 26 26 0 0 1 122 138
+    A 26 26 0 0 1 148 112
+    Z
+  " fill="url(#leftG)"/>
+  <!-- Right half -->
+  <path d="
+    M 280 112
+    L 364 112
+    A 26 26 0 0 1 390 138
+    A 26 26 0 0 1 364 164
+    L 320 164
+    L 320 374
+    A 26 26 0 0 1 294 400
+    A 26 26 0 0 1 268 374
+    L 268 124
+    A 12 12 0 0 1 280 112
+    Z
+  " fill="url(#rightG)"/>
+</svg>

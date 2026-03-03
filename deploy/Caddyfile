@@ -1,0 +1,35 @@
+# =============================================================================
+# Tandem GTD — Caddy reverse proxy configuration
+# =============================================================================
+# Replace "your-domain.com" with your actual domain name.
+# Caddy will automatically obtain and renew TLS certificates via Let's Encrypt.
+# =============================================================================
+
+your-domain.com {
+	# Enable compression
+	encode gzip zstd
+
+	# Reverse proxy all requests to the Next.js app
+	reverse_proxy app:3000 {
+		# Pass original host header
+		header_up Host {host}
+		header_up X-Real-IP {remote_host}
+		header_up X-Forwarded-For {remote_host}
+		header_up X-Forwarded-Proto {scheme}
+	}
+
+	# Security headers
+	header {
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "SAMEORIGIN"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		# Remove server identification
+		-Server
+	}
+
+	# Logs
+	log {
+		output stdout
+		format console
+	}
+}

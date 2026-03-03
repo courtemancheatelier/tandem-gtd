@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "tandem": {
+      "command": "npx",
+      "args": ["tsx", "src/mcp/server.ts"],
+      "env": {
+        "DATABASE_URL": "postgresql://user:password@localhost:5432/tandem?schema=public",
+        "TANDEM_USER_ID": "your-user-id-here"
+      }
+    }
+  }
+}

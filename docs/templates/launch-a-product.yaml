@@ -1,0 +1,53 @@
+title: Launch a Product
+description: >
+  End-to-end product launch checklist covering marketing, engineering,
+  and operations. Customize based on your team and product type.
+type: PARALLEL
+outcome: "{product_name} is live and announced"
+icon: rocket
+variables:
+  - product_name
+  - launch_date
+
+subProjects:
+  - title: "Engineering — {product_name}"
+    type: SEQUENTIAL
+    tasks:
+      - title: "Feature freeze for {product_name}"
+        estimatedMins: 15
+        energyLevel: LOW
+      - title: "Final QA pass"
+        estimatedMins: 120
+        energyLevel: HIGH
+      - title: "Deploy to production"
+        estimatedMins: 30
+        energyLevel: HIGH
+      - title: "Smoke test production"
+        estimatedMins: 30
+        energyLevel: MEDIUM
+
+  - title: "Marketing — {product_name}"
+    type: SEQUENTIAL
+    tasks:
+      - title: "Write launch announcement"
+        estimatedMins: 60
+        energyLevel: HIGH
+        contextName: "@Computer"
+      - title: "Prepare social media posts"
+        estimatedMins: 30
+        energyLevel: MEDIUM
+        contextName: "@Computer"
+      - title: "Send launch email"
+        estimatedMins: 15
+        energyLevel: LOW
+        contextName: "@Computer"
+
+tasks:
+  - title: "Update website/landing page for {product_name}"
+    estimatedMins: 60
+    energyLevel: HIGH
+    contextName: "@Computer"
+  - title: "Monitor launch day metrics"
+    estimatedMins: 30
+    energyLevel: MEDIUM
+    contextName: "@Computer"
