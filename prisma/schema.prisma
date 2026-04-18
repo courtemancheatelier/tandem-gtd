@@ -1,0 +1,2426 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================================
+// ENUMS
+// ============================================================================
+
+enum GoalStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  ACHIEVED
+  DEFERRED
+}
+
+enum HorizonLevel {
+  RUNWAY      // Current actions
+  HORIZON_1   // Current projects
+  HORIZON_2   // Areas of focus
+  HORIZON_3   // 1-2 year goals
+  HORIZON_4   // 3-5 year vision
+  HORIZON_5   // Life purpose
+}
+
+enum ProjectStatus {
+  ACTIVE
+  ON_HOLD
+  COMPLETED
+  DROPPED
+  SOMEDAY_MAYBE
+}
+
+enum ProjectType {
+  SEQUENTIAL      // Tasks must be done in order
+  PARALLEL        // All tasks available at once
+  SINGLE_ACTIONS  // Container for one-off tasks
+}
+
+enum ChildType {
+  SEQUENTIAL    // Sub-projects activate one at a time, in sortOrder
+  PARALLEL      // All sub-projects are active simultaneously
+}
+
+enum TaskStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  WAITING
+  COMPLETED
+  DROPPED
+}
+
+enum EnergyLevel {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum InboxItemStatus {
+  UNPROCESSED
+  PROCESSED
+  DELETED
+}
+
+enum ReviewStatus {
+  IN_PROGRESS
+  COMPLETED
+}
+
+enum HorizonReviewType {
+  INITIAL_SETUP
+  QUARTERLY
+  ANNUAL
+}
+
+enum VelocityUnit {
+  TASKS
+  HOURS
+  AUTO
+}
+
+enum ProjectRole {
+  OWNER
+  COLLABORATOR
+  VIEWER
+}
+
+enum TimeAuditStatus {
+  ACTIVE
+  PAUSED
+  COMPLETED
+  ABANDONED
+}
+
+// Event RSVP enums
+enum EventFieldType {
+  ATTENDANCE
+  HEADCOUNT
+  SINGLE_SELECT
+  MULTI_SELECT
+  CLAIM
+  TEXT
+  TOGGLE
+}
+
+enum InvitationStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+}
+
+enum AttendanceStatus {
+  YES
+  NO
+  MAYBE
+}
+
+// ============================================================================
+// HISTORY / EVENT SOURCING ENUMS
+// ============================================================================
+
+enum TaskEventType {
+  CREATED
+  UPDATED
+  STATUS_CHANGED
+  COMPLETED
+  REOPENED
+  MOVED_TO_PROJECT
+  REMOVED_FROM_PROJECT
+  DELEGATED
+  DELEGATION_ACCEPTED
+  DELEGATION_DECLINED
+  DEFERRED
+  ACTIVATED
+  CONTEXT_CHANGED
+  DEPENDENCY_ADDED
+  DEPENDENCY_REMOVED
+  UNBLOCKED
+  PROMOTED
+  ARCHIVED
+  RESTORED
+  COMMENTED
+  THREAD_OPENED
+  THREAD_RESOLVED
+  DECISION_REQUESTED
+  DECISION_RESOLVED
+}
+
+enum ProjectEventType {
+  CREATED
+  UPDATED
+  COMPLETED
+  REACTIVATED
+  TASK_ADDED
+  TASK_REMOVED
+  TASK_REORDERED
+  NEXT_ACTION_ADVANCED
+  STALLED
+  SHARED
+  UNSHARED
+  ARCHIVED
+  RESTORED
+  CHILD_ACTIVATED
+  CHILDREN_REORDERED
+  RETENTION_WARNING
+  THREAD_OPENED
+  THREAD_RESOLVED
+  DECISION_REQUESTED
+  DECISION_RESOLVED
+}
+
+enum InboxEventType {
+  CAPTURED
+  PROCESSED
+  MERGED
+}
+
+enum ActorType {
+  USER
+  SYSTEM
+  AI
+}
+
+enum EventSource {
+  MANUAL
+  MCP
+  AI_EMBED
+  CASCADE
+  SCHEDULER
+  API
+  IMPORT
+  TEAM_SYNC
+}
+
+enum ThreadPurpose {
+  QUESTION
+  BLOCKER
+  UPDATE
+  FYI
+}
+
+enum DecisionStatus {
+  OPEN
+  RESOLVED
+  EXPIRED
+  WITHDRAWN
+  // Decision Proposal lifecycle states
+  DRAFT
+  GATHERING_INPUT
+  UNDER_REVIEW
+  DECIDED
+  DEFERRED
+  CANCELED
+}
+
+enum DecisionVote {
+  APPROVE
+  REJECT
+  COMMENT
+  DEFER
+}
+
+enum DecisionType {
+  APPROVAL
+  POLL
+  QUICK_POLL
+  PROPOSAL   // Full decision proposal workflow
+}
+
+enum InputRequestType {
+  RESEARCH
+  VOTE
+  REVIEW
+  APPROVAL_INPUT
+  OPEN_INPUT
+}
+
+enum InputRequestStatus {
+  PENDING
+  SUBMITTED
+  WAIVED
+  EXPIRED
+}
+
+enum DecisionEventType {
+  CREATED
+  PUBLISHED
+  INPUT_REQUESTED
+  CONTRIBUTION_ADDED
+  VOTE_CAST
+  VOTE_CHANGED
+  DEADLINE_SET
+  DEADLINE_REACHED
+  MOVED_TO_REVIEW
+  DECIDED
+  DEFERRED_EVENT
+  CANCELED_EVENT
+  COMMENT_ADDED
+  REMINDER_SENT
+}
+
+enum ImportJobStatus {
+  PENDING           // File uploaded, awaiting preview/confirmation
+  PREVIEWING        // Parsing file, generating preview
+  AWAITING_CONFIRM  // Preview ready, waiting for user to confirm
+  PROCESSING        // Import in progress
+  COMPLETED         // Import finished successfully
+  FAILED            // Import failed (see errors)
+  CANCELLED         // User cancelled after preview
+}
+
+enum SnapshotReason {
+  COMPLETION
+  WEEKLY_REVIEW
+  BULK_OPERATION
+  MANUAL
+  REVERT_POINT
+}
+
+// AI privacy level for individual items
+enum AIVisibility {
+  VISIBLE    // AI can read and reference this item (default)
+  HIDDEN     // AI cannot see this item in any context
+  READ_ONLY  // AI can see it for context but cannot modify it
+}
+
+enum DependencyType {
+  FINISH_TO_START
+  START_TO_START
+  FINISH_TO_FINISH
+  START_TO_FINISH
+}
+
+enum LandingMode {
+  FLAGSHIP   // tandemgtd.com — full marketing site
+  OPERATOR   // Operator instance — custom branding with "Powered by Tandem" footer
+}
+
+enum RegistrationMode {
+  CLOSED       // No new signups allowed
+  WAITLIST     // New OAuth signups go to waitlist
+  INVITE_ONLY  // New signups require a valid invite code
+  OPEN         // New OAuth signups auto-create accounts
+  TRIAL        // New OAuth signups get time-limited trial accounts
+}
+
+enum AuthMode {
+  OAUTH_ONLY             // Only OAuth sign-in allowed
+  OAUTH_AND_CREDENTIALS  // Both OAuth and email/password allowed
+}
+
+enum UserTier {
+  WAITLIST
+  ALPHA
+  BETA
+  GENERAL
+}
+
+enum WaitlistStatus {
+  PENDING   // Waiting for admin approval
+  PROMOTED  // Admin created their account
+  DECLINED  // Admin declined
+}
+
+enum CalendarEventType {
+  TIME_SPECIFIC    // "Meeting at 3pm"
+  DAY_SPECIFIC     // "Submit report" — specific day, no specific time
+  INFORMATION      // "Conference starts" — awareness only
+  TIME_BLOCK       // "Deep work: pattern drafting" — intentional focus time
+}
+
+enum CalendarSyncStatus {
+  NOT_SYNCED
+  PENDING_SYNC
+  SYNCED
+  SYNC_ERROR
+  EXTERNAL
+}
+
+enum TeamRole {
+  ADMIN
+  MEMBER
+}
+
+enum TeamEventType {
+  CREATED
+  UPDATED
+  DELETED
+  MEMBER_ADDED
+  MEMBER_REMOVED
+  MEMBER_ROLE_CHANGED
+}
+
+enum NotificationType {
+  TASK_DUE_TODAY
+  TASK_OVERDUE
+  TASK_DUE_TOMORROW
+  WEEKLY_REVIEW_REMINDER
+  DAILY_DIGEST
+  HORIZON_REVIEW_DUE
+  SYSTEM
+  TRIAL_WELCOME
+  TRIAL_REMINDER
+  RETENTION_WARNING
+  THREAD_MENTION
+  DECISION_REQUESTED
+  DECISION_RESOLVED
+  DECISION_DEADLINE
+  DECISION_EXPIRED
+  DECISION_PUBLISHED
+  DECISION_INPUT_NEEDED
+  DECISION_INPUT_RECEIVED
+  DECISION_ALL_INPUTS_COMPLETE
+  DECISION_DECIDED
+  DECISION_DEFERRED
+  DECISION_CANCELED
+  DELEGATION_RECEIVED
+  DELEGATION_ACCEPTED
+  DELEGATION_DECLINED
+  DELEGATION_COMPLETED
+  DELEGATION_RECALLED
+}
+
+enum DelegationStatus {
+  PENDING
+  VIEWED
+  ACCEPTED
+  DECLINED
+  COMPLETED
+  RECALLED
+}
+
+enum DelegationLanding {
+  INBOX
+  DO_NOW
+}
+
+// ============================================================================
+// AUTH
+// ============================================================================
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String?  // Null for OAuth-only users
+  name      String
+  isAdmin    Boolean  @default(false)
+  isDisabled Boolean  @default(false)
+  tier          UserTier  @default(WAITLIST)
+  invitedById   String?   @map("invited_by_id")
+  invitedBy     User?     @relation("UserInvites", fields: [invitedById], references: [id])
+  invitees      User[]    @relation("UserInvites")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // AI Integration
+  anthropicApiKey    String?  // Encrypted. User's own API key (takes priority over server key)
+  aiEnabled          Boolean  @default(true) // User can opt out of ALL AI features
+  inAppAiEnabled     Boolean  @default(true) // Sub-master for all in-app AI (chat + features)
+  inAppAiChatEnabled     Boolean  @default(true)
+  inAppAiFeaturesEnabled Boolean  @default(true)
+  aiDailyLimit       Int?     // Override server default for this user
+  aiMessagesUsedToday Int     @default(0)
+  aiLimitResetAt     DateTime?
+
+  // Internal scheduler — recurring missed sweep (replaces external cron)
+  lastMissedSweepAt  DateTime?
+
+  // AI Privacy Controls
+  aiCanReadTasks     Boolean  @default(true)  // AI can see user's tasks
+  aiCanReadProjects  Boolean  @default(true)  // AI can see user's projects
+  aiCanReadInbox     Boolean  @default(true)  // AI can see user's inbox
+  aiCanReadNotes     Boolean  @default(true)  // AI can see notes/wiki content
+  aiCanModify        Boolean  @default(true)  // AI can create/edit (vs read-only)
+  aiDefaultVisibility AIVisibility @default(VISIBLE) // Default for new items
+  mcpEnabled         Boolean      @default(true)     // User-level MCP toggle
+
+  // Feature Visibility — JSON array of feature keys the user has hidden
+  hiddenFeatures     String?      @db.Text @map("hidden_features")
+
+  // Relations
+  accounts           Account[]
+  areas              Area[]
+  goals              Goal[]
+  horizonNotes       HorizonNote[]
+  projects           Project[]
+  tasks              Task[]
+  contexts           Context[]
+  inboxItems         InboxItem[]
+  waitingFors        WaitingFor[]
+  wikiArticles       WikiArticle[]
+  wikiVersionEdits   WikiArticleVersion[] @relation("WikiVersionActor")
+  helpArticleEdits   HelpArticle[]
+  routines           Routine[]
+  routineLogs        RoutineLog[]
+  projectTemplates   ProjectTemplate[]
+  hiddenTemplates    HiddenTemplate[]
+  weeklyReviews      WeeklyReview[]
+  horizonReviews     HorizonReview[]
+  projectMemberships ProjectMember[]
+  assignedTasks      Task[]         @relation("AssignedTasks")
+  apiTokens          ApiToken[]
+  importJobs         ImportJob[]
+
+  // History (as actor)
+  taskEvents         TaskEvent[]
+  projectEvents      ProjectEvent[]
+  inboxEvents        InboxEvent[]
+  teamEvents         TeamEvent[]    @relation("TeamEvents")
+
+  // Baselines
+  baselines          BaselineSnapshot[]
+
+  // Teams
+  teamMemberships    TeamMember[]
+  teamsCreated       Team[]         @relation("TeamsCreated")
+
+  // Threads
+  threadsCreated     Thread[]       @relation("ThreadCreator")
+  threadsResolved    Thread[]       @relation("ThreadResolver")
+  threadMessages     ThreadMessage[]
+  threadMentions     ThreadMention[]
+  threadReactions    ThreadReaction[]
+
+  // Decisions
+  decisionsRequested   DecisionRequest[]    @relation("DecisionRequester")
+  decisionResponses    DecisionResponse[]
+  decisionRespondents  DecisionRespondent[]
+  decisionOptionVotes    DecisionOptionVote[]   @relation("DecisionOptionVoter")
+  decisionContributions  DecisionContribution[] @relation("DecisionContributions")
+  decisionInputRequests  DecisionInputRequest[] @relation("DecisionInputAssignee")
+  decisionEvents         DecisionEvent[]        @relation("DecisionEventActor")
+
+  // Calendar
+  calendarEvents          CalendarEvent[]
+  googleCalendarSync      GoogleCalendarSync?
+  microsoftCalendarSync   MicrosoftCalendarSync?
+
+  // OAuth
+  oauthAuthCodes     OAuthAuthorizationCode[]
+  oauthAccessTokens  OAuthAccessToken[]
+  oauthRefreshTokens OAuthRefreshToken[]
+
+  // Trial
+  isTrial            Boolean   @default(false)
+  trialStartedAt     DateTime?
+  trialExpiresAt     DateTime?
+  firstLoginAt       DateTime?
+  lastLoginAt        DateTime?
+  loginCount         Int       @default(0)
+
+  // Behavioral counters for tandem-manage polling
+  cascadeEventCount  Int       @default(0) @map("cascade_event_count")
+  lastWhatNowAt      DateTime? @map("last_what_now_at")
+
+  // Onboarding
+  onboardingCompletedAt DateTime?
+
+  // Waitlist
+  waitlistEntry      WaitlistEntry?
+
+  // Invite codes
+  inviteCodesCreated InviteCode[] @relation("InviteCodesCreated")
+  inviteCodeUsed     InviteCode?  @relation("InviteCodeUsed")
+
+  // Notifications
+  pushSubscriptions        PushSubscription[]
+  notifications            Notification[]
+  notificationPreference   NotificationPreference?
+
+  // Password setup
+  passwordSetupToken       PasswordSetupToken?
+
+  // Trial interest
+  trialInterest            TrialInterest?
+
+  // Time Audit
+  timeAuditChallenges TimeAuditChallenge[]
+
+  // Focus Timer
+  timerSessions TaskTimerSession[]
+
+  // Commitment Drift Dashboard
+  driftDashboardEnabled    Boolean  @default(true)  @map("drift_dashboard_enabled")
+  driftDisplacementEnabled Boolean  @default(true)  @map("drift_displacement_enabled")
+  driftBreakdownThreshold  Int      @default(4)      @map("drift_breakdown_threshold")
+
+  // Email-to-Inbox Capture
+  emailInboxToken    String?  @unique
+  emailInboxEnabled  Boolean  @default(false)
+
+  // Event RSVP
+  eventsOwned        Event[]          @relation("EventOwner")
+  eventInvitations   EventInvitation[]
+  eventResponses     EventResponse[]
+  claimLocks         ClaimLock[]
+  eventTriggerAssignees EventTrigger[] @relation("EventTriggerAssignee")
+
+  // Delegation
+  delegationsGiven     Delegation[]   @relation("DelegationsGiven")
+  delegationsReceived  Delegation[]   @relation("DelegationsReceived")
+  delegatedWaitingFors WaitingFor[]   @relation("DelegatedUser")
+
+  // Sleep Tracker
+  sleepLogs            SleepLog[]
+
+  @@index([tier])
+  @@index([invitedById])
+  @@index([isTrial])
+  @@index([trialExpiresAt])
+  @@index([lastLoginAt])
+}
+
+// OAuth provider accounts (Google, Apple, etc.)
+model Account {
+  id                String  @id @default(cuid())
+  provider          String  // "google", "apple"
+  providerAccountId String  // Provider's unique user ID
+  accessToken       String? @db.Text
+  refreshToken      String? @db.Text
+  expiresAt         Int?    // Token expiry as Unix timestamp
+  tokenType         String?
+  scope             String?
+  idToken           String? @db.Text
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+// Personal access tokens for MCP server auth
+model ApiToken {
+  id        String   @id @default(cuid())
+  name      String   // e.g. "Claude Desktop", "Claude Code"
+  token     String   @unique // Hashed token (bcrypt)
+  prefix    String   // First 8 chars of plain token, for identification
+  scopes    String[] @default([])  // e.g. ["read", "write"]
+  lastUsed  DateTime?
+  expiresAt DateTime?
+  revokedAt DateTime?
+  createdAt DateTime @default(now())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([token])
+  @@index([prefix])
+  @@index([userId])
+}
+
+// Server-wide settings (single row, managed by admin)
+model ServerSettings {
+  id                     String  @id @default("singleton")
+  serverAnthropicApiKey  String? // Encrypted. Shared API key for all users
+  serverAiEnabled        Boolean @default(false) // Must be explicitly enabled
+  allowUserOwnKeys       Boolean @default(true)  // Let users bring their own keys
+  shareServerKey         Boolean @default(false)  // Let non-admin users use the server key
+  defaultAiDailyLimit    Int     @default(100)    // Default daily message limit per user
+  defaultAiModel         String  @default("claude-sonnet-4-20250514")
+  mcpEnabled             Boolean @default(true)
+  serverInAppAiEnabled   Boolean @default(true)  // Server-level in-app AI chat toggle
+  allowUserAiToggle      Boolean @default(true)  // Let users opt out of AI entirely
+  allowUserInAppAiToggle Boolean @default(true)  // Let users toggle in-app AI chat
+  allowUserMcpToggle     Boolean @default(true)  // Let users toggle MCP access
+  teamsEnabled           Boolean @default(true)
+  teamsAdminOnly         Boolean @default(true)
+  apiAccessEnabled       Boolean @default(false)  // Allow Bearer token auth on REST API routes
+  landingEnabled         Boolean @default(true)   // Show public landing page at / for unauthenticated visitors
+  registrationMode       RegistrationMode @default(WAITLIST)
+  authMode               AuthMode         @default(OAUTH_AND_CREDENTIALS)
+  maxInviteCodesPerUser  Int      @default(2)
+  trialDurationDays      Int      @default(30)
+
+  // ── Instance Branding ──
+  landingMode        LandingMode @default(OPERATOR)
+  instanceName       String      @default("Tandem GTD")
+  instanceTagline    String      @default("A self-hosted GTD app that actually does GTD.")
+  instanceDesc       String?     @db.Text
+  instanceLogoUrl    String?
+  accentColor        String      @default("#6366f1")
+  operatorName       String?
+  operatorUrl        String?
+
+  // ── Content Blocks ──
+  heroHeading        String?
+  heroDescription    String?     @db.Text
+  featureHighlights  String?     @db.Text  // JSON array of {title, description, icon}
+  ctaHeading         String?
+  ctaDescription     String?
+  ctaButtonText      String?
+  ctaButtonUrl       String?
+
+  // ── Operator Support ──
+  supportUrl         String?
+
+  // ── SMTP / Email ──
+  smtpHost           String?
+  smtpPort           Int?
+  smtpUser           String?
+  smtpPass           String?  // Encrypted
+  smtpFrom           String?
+  smtpSecure         Boolean  @default(true)
+
+  // ── Email Templates ──
+  emailWaitlistSubject   String?
+  emailWaitlistBody      String?  @db.Text
+  emailWelcomeSubject    String?
+  emailWelcomeBody       String?  @db.Text
+
+  // ── Feature Visibility — JSON array of feature keys disabled instance-wide ──
+  disabledFeatures       String?  @db.Text @map("disabled_features")
+
+
+  // ── Data Retention ──
+  retentionEnabled         Boolean @default(false)
+  retentionPeriodDays      Int     @default(180)
+  retentionGraceDays       Int     @default(30)
+  retentionExportPath      String?
+  retentionExportKeepDays  Int     @default(90)
+  retentionStandaloneTasks Boolean @default(true)
+  retentionBatchSize       Int     @default(10)
+
+  updatedAt              DateTime @updatedAt
+}
+
+model RetentionLog {
+  id           String   @id @default(cuid())
+  action       String   // SCHEDULED, PURGED, CANCELLED, EXPORT_CLEANED, STANDALONE_PURGED
+  projectId    String?
+  projectTitle String?
+  taskCount    Int      @default(0)
+  eventCount   Int      @default(0)
+  exportPath   String?
+  actorType    ActorType @default(SYSTEM)
+  actorId      String?
+  details      Json?
+  createdAt    DateTime @default(now())
+
+  @@index([action, createdAt])
+  @@index([projectId])
+}
+
+model WaitlistEntry {
+  id                String         @id @default(cuid())
+  email             String         @unique
+  name              String
+  provider          String
+  providerAccountId String
+  status            WaitlistStatus @default(PENDING)
+  promotedUserId    String?        @unique
+  promotedUser      User?          @relation(fields: [promotedUserId], references: [id], onDelete: SetNull)
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+
+  @@unique([provider, providerAccountId])
+}
+
+model InviteCode {
+  id          String    @id @default(cuid())
+  code        String    @unique
+  createdById String    @map("created_by_id")
+  createdBy   User      @relation("InviteCodesCreated", fields: [createdById], references: [id], onDelete: Cascade)
+  usedById    String?   @unique @map("used_by_id")
+  usedBy      User?     @relation("InviteCodeUsed", fields: [usedById], references: [id], onDelete: SetNull)
+  usedAt      DateTime?
+  expiresAt   DateTime?
+  tier        UserTier  @default(BETA)
+  createdAt   DateTime  @default(now())
+
+  @@index([code])
+  @@index([createdById])
+}
+
+model AllowedDomain {
+  id        String   @id @default(cuid())
+  domain    String   @unique
+  tier      UserTier @default(BETA)
+  note      String?
+  createdAt DateTime @default(now())
+
+  @@index([domain])
+}
+
+model EmailSubscriber {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  createdAt DateTime @default(now())
+}
+
+model TrialInterest {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  userId    String?  @unique
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  source    String   @default("trial-ended") // e.g. "trial-ended", "banner"
+  createdAt DateTime @default(now())
+}
+
+// Survives account deletion — prevents trial re-signup
+model TrialUsage {
+  id                String   @id @default(cuid())
+  email             String   @unique
+  provider          String
+  providerAccountId String
+  createdAt         DateTime @default(now())
+
+  @@index([provider, providerAccountId])
+}
+
+// ============================================================================
+// HORIZONS OF FOCUS
+// ============================================================================
+
+model Area {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  isActive    Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  userId   String
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  projects Project[]
+  goals    Goal[]
+  routines           Routine[]
+
+  @@index([userId])
+}
+
+model Goal {
+  id          String     @id @default(cuid())
+  title       String
+  description String?
+  status      GoalStatus @default(NOT_STARTED)
+  horizon     HorizonLevel @default(HORIZON_3)
+  targetDate  DateTime?
+  progress    Int        @default(0) // 0-100
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  userId   String
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  areaId   String?
+  area     Area?    @relation(fields: [areaId], references: [id], onDelete: SetNull)
+  projects Project[]
+  routines Routine[]
+
+  @@index([userId])
+  @@index([areaId])
+}
+
+model HorizonNote {
+  id        String       @id @default(cuid())
+  level     HorizonLevel
+  title     String
+  content   String       @db.Text
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+// ============================================================================
+// PROJECTS
+// ============================================================================
+
+model Project {
+  id            String        @id @default(cuid())
+  title         String
+  description   String?       @db.Text
+  status        ProjectStatus @default(ACTIVE)
+  type          ProjectType   @default(SEQUENTIAL)
+  childType     ChildType     @default(SEQUENTIAL) @map("child_type")
+  outcome       String?       // Desired outcome statement
+  targetDate    DateTime?     @map("target_date")
+  startDate     DateTime?     @map("start_date")
+  endDate       DateTime?     @map("end_date")
+  velocityUnit  VelocityUnit  @default(AUTO) @map("velocity_unit")
+  sortOrder     Int           @default(0)
+  isSomedayMaybe Boolean      @default(false)
+  completedAt   DateTime?
+  version       Int           @default(1)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  // Data retention
+  retentionExempt    Boolean   @default(false)
+  purgeScheduledAt   DateTime?
+
+  userId  String
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  areaId  String?
+  area    Area?   @relation(fields: [areaId], references: [id], onDelete: SetNull)
+  goalId  String?
+  goal    Goal?   @relation(fields: [goalId], references: [id], onDelete: SetNull)
+
+  // Team ownership
+  teamId  String? @map("team_id")
+  team    Team?   @relation(fields: [teamId], references: [id], onDelete: SetNull)
+
+  // Team feature toggles (only meaningful when teamId is set)
+  threadsEnabled         Boolean @default(true)
+  decisionsEnabled       Boolean @default(true)
+  completionNotesEnabled Boolean @default(true)
+  outlineReady           Boolean @default(false) @map("outline_ready")
+
+  // AI privacy — per-item override
+  aiVisibility  AIVisibility @default(VISIBLE)
+
+  // Sub-project hierarchy
+  depth          Int            @default(0)
+  path           String         @default("")
+  rollupProgress Float?         @map("rollup_progress")
+  rollupStatus   ProjectStatus? @map("rollup_status")
+
+  parentProjectId String?        @map("parent_project_id")
+  parentProject   Project?       @relation("ProjectChildren", fields: [parentProjectId], references: [id], onDelete: SetNull)
+  childProjects   Project[]      @relation("ProjectChildren")
+
+  tasks      Task[]
+  members    ProjectMember[]
+  events     ProjectEvent[]
+  baselines  BaselineSnapshot[]
+  threads    Thread[]
+
+  // Event RSVP
+  rsvpEvent  Event?
+
+  // Calendar
+  calendarEvents CalendarEvent[]
+
+  // Decision Proposals scoped to this project
+  decisionProposals DecisionRequest[] @relation("DecisionProposalProject")
+
+  // External link
+  externalLinkUrl   String?  @map("external_link_url")
+  externalLinkLabel String?  @map("external_link_label")
+
+  @@index([userId])
+  @@index([areaId])
+  @@index([goalId])
+  @@index([status])
+  @@index([parentProjectId])
+  @@index([teamId])
+  @@index([status, completedAt, retentionExempt, purgeScheduledAt])
+}
+
+// ============================================================================
+// TASKS
+// ============================================================================
+
+model Task {
+  id            String      @id @default(cuid())
+  title         String
+  notes         String?     @db.Text
+  status        TaskStatus  @default(NOT_STARTED)
+  isNextAction  Boolean     @default(false)
+  estimatedMins Int?
+  energyLevel   EnergyLevel?
+  scheduledDate DateTime?   // Tickler / defer date
+  dueDate       DateTime?
+  sortOrder     Int         @default(0)
+  completedAt   DateTime?
+  version       Int         @default(1)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  // AI privacy — per-item override
+  aiVisibility  AIVisibility @default(VISIBLE)
+
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  projectId   String?
+  project     Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  contextId   String?
+  context     Context? @relation(fields: [contextId], references: [id], onDelete: SetNull)
+  assignedToId String?
+  assignedTo  User?    @relation("AssignedTasks", fields: [assignedToId], references: [id], onDelete: SetNull)
+
+  // PM fields
+  isMilestone     Boolean  @default(false) @map("is_milestone")
+  percentComplete Int      @default(0)     @map("percent_complete")
+  actualMinutes   Int?     @map("actual_minutes")
+
+  // Explicit dependency relations
+  predecessors  TaskDependency[] @relation("Successor")
+  successors    TaskDependency[] @relation("Predecessor")
+
+  // History
+  events     TaskEvent[]
+  snapshots  TaskSnapshot[]
+
+  // Notifications
+  notifications Notification[]
+
+  // Threads
+  threads Thread[]
+
+  // Calendar
+  calendarEvents CalendarEvent[]
+
+  // Routine link (for routine card rendering + recycling)
+  routineId        String?         @map("healthProtocolId")
+  routine          Routine?        @relation(fields: [routineId], references: [id], onDelete: SetNull)
+
+  // Time Audit
+  timeAuditEntries TimeAuditEntry[]
+
+  // Focus Timer
+  timerSessions TaskTimerSession[]
+
+  // Commitment Drift
+  deferralCount     Int       @default(0)   @map("deferral_count")
+  dueDatePushCount  Int       @default(0)   @map("due_date_push_count")
+  originalDueDate   DateTime?              @map("original_due_date")
+  totalDriftDays    Int       @default(0)   @map("total_drift_days")
+
+  // External link
+  externalLinkUrl   String?  @map("external_link_url")
+  externalLinkLabel String?  @map("external_link_label")
+
+  // Decision respondent task link
+  decisionRespondent DecisionRespondent? @relation("DecisionRespondentTask")
+  decisionInputRequest DecisionInputRequest? @relation("DecisionInputTask")
+
+  // Delegation
+  delegation    Delegation?
+
+  @@index([userId])
+  @@index([projectId])
+  @@index([contextId])
+  @@index([status])
+  @@index([isNextAction])
+  @@index([scheduledDate])
+  @@index([routineId])
+}
+
+// ============================================================================
+// CALENDAR EVENTS
+// ============================================================================
+
+model CalendarEvent {
+  id              String              @id @default(cuid())
+  title           String
+  description     String?             @db.Text
+  eventType       CalendarEventType   @default(TIME_SPECIFIC)
+  date            DateTime            // The date of the event
+  startTime       DateTime?           // Start time (null for all-day / day-specific)
+  endTime         DateTime?           // End time
+  allDay          Boolean             @default(false)
+  location        String?
+  reminderMinutes Int?                // e.g. 15, 30, 60
+
+  color           String?             // Hex color from Google Calendar (event or calendar level)
+
+  // Calendar sync
+  syncStatus         CalendarSyncStatus  @default(NOT_SYNCED)
+  googleEventId      String?
+  googleCalendarId   String?
+  microsoftEventId   String?             @map("microsoft_event_id")
+  microsoftCalendarId String?            @map("microsoft_calendar_id")
+  lastSyncedAt       DateTime?
+  syncError          String?
+
+  // Recurring events (Phase 2c)
+  recurrenceRule      String?           // RRULE string (e.g. "FREQ=WEEKLY;BYDAY=MO,WE,FR")
+  recurringEventId    String?           // Parent event ID for materialized exceptions
+  isRecurringInstance Boolean           @default(false)
+  excludedDates       Json?             // ["2026-03-15", ...] deleted single occurrences
+
+  recurringParent     CalendarEvent?    @relation("RecurringInstances", fields: [recurringEventId], references: [id], onDelete: Cascade)
+  recurringInstances  CalendarEvent[]   @relation("RecurringInstances")
+
+  // Relations
+  taskId          String?
+  task            Task?               @relation(fields: [taskId], references: [id], onDelete: SetNull)
+  projectId       String?
+  project         Project?            @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  userId          String
+  user            User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+
+  @@unique([userId, googleEventId, googleCalendarId])
+  @@index([userId])
+  @@index([date])
+  @@index([userId, date])
+  @@index([syncStatus])
+  @@index([taskId])
+  @@index([recurringEventId])
+}
+
+model GoogleCalendarSync {
+  id                    String   @id @default(cuid())
+  userId                String   @unique
+  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  syncEnabled           Boolean  @default(true)
+  tandemCalendarId      String?  // Google Calendar ID for the "Tandem" secondary calendar
+  tandemCalendarCreated Boolean  @default(false)
+  consecutiveErrors     Int      @default(0)
+  lastError             String?
+  lastErrorAt           DateTime?
+  lastSyncedAt          DateTime?
+  // Read sync (Phase 2a)
+  watchedCalendars      Json?    // [{ id, summary, color, enabled, syncToken }]
+  lastReadSyncAt        DateTime?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+}
+
+model MicrosoftCalendarSync {
+  id                    String   @id @default(cuid())
+  userId                String   @unique
+  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  syncEnabled           Boolean  @default(true)
+  defaultCalendarId     String?  @map("default_calendar_id")
+  consecutiveErrors     Int      @default(0)
+  lastError             String?
+  lastErrorAt           DateTime?
+  lastSyncedAt          DateTime?
+  watchedCalendars      Json?    // [{ id, name, color, enabled }]
+  lastReadSyncAt        DateTime?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  @@map("microsoft_calendar_sync")
+}
+
+// ============================================================================
+// CONTEXTS
+// ============================================================================
+
+model Context {
+  id        String   @id @default(cuid())
+  name      String   // e.g. "@home", "@office", "@phone", "@errands"
+  color     String?  // Hex color for UI
+  icon      String?  // Lucide icon name
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tasks  Task[]
+
+  @@unique([userId, name])
+  @@index([userId])
+}
+
+// ============================================================================
+// GTD WORKFLOW
+// ============================================================================
+
+model InboxItem {
+  id        String          @id @default(cuid())
+  content   String
+  notes     String?         @db.Text
+  status    InboxItemStatus @default(UNPROCESSED)
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+
+  // AI privacy — per-item override
+  aiVisibility  AIVisibility @default(VISIBLE)
+
+  // Source tracking
+  source      String?   // "email", "api", "mcp", "manual", "share"
+  sourceEmail String?   // Original sender email (for email-captured items)
+
+  // External link (from share target or manual entry)
+  externalLinkUrl   String?  @map("external_link_url")
+  externalLinkLabel String?  @map("external_link_label")
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  events InboxEvent[]
+
+  @@index([userId])
+  @@index([status])
+}
+
+model WaitingFor {
+  id          String    @id @default(cuid())
+  description String
+  person      String    // Who are we waiting on
+  dueDate     DateTime?
+  followUpDate DateTime?
+  isResolved  Boolean   @default(false)
+  resolvedAt  DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Link to thread (for auto-resolution of BLOCKER threads)
+  threadId String? @map("thread_id")
+  thread   Thread? @relation(fields: [threadId], references: [id], onDelete: SetNull)
+
+  // Delegation link
+  delegatedUserId String? @map("delegated_user_id")
+  delegatedUser   User?   @relation("DelegatedUser", fields: [delegatedUserId], references: [id], onDelete: SetNull)
+  delegation      Delegation?
+
+  @@index([userId])
+  @@index([isResolved])
+  @@index([threadId])
+}
+
+model WikiArticle {
+  id        String   @id @default(cuid())
+  title     String
+  slug      String
+  content   String   @db.Text
+  tags      String[] // Array of tag strings
+  version   Int      @default(1)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Full-text search vector (managed by DB trigger, not Prisma)
+  searchVector Unsupported("tsvector")? @map("search_vector")
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  teamId  String?  @map("team_id")
+  team    Team?    @relation(fields: [teamId], references: [id], onDelete: SetNull)
+
+  versions          WikiArticleVersion[]
+  outgoingBacklinks WikiBacklink[] @relation("BacklinkSource")
+  incomingBacklinks WikiBacklink[] @relation("BacklinkTarget")
+  decisionProposals DecisionRequest[] @relation("DecisionWikiArticle")
+
+  @@unique([userId, slug])
+  @@unique([teamId, slug])
+  @@index([userId])
+  @@index([teamId])
+  @@index([tags], type: Gin)
+}
+
+model WikiBacklink {
+  id              String      @id @default(cuid())
+  sourceArticleId String
+  targetArticleId String
+  sourceArticle   WikiArticle @relation("BacklinkSource", fields: [sourceArticleId], references: [id], onDelete: Cascade)
+  targetArticle   WikiArticle @relation("BacklinkTarget", fields: [targetArticleId], references: [id], onDelete: Cascade)
+
+  @@unique([sourceArticleId, targetArticleId])
+  @@index([targetArticleId])
+  @@index([sourceArticleId])
+}
+
+model WikiArticleVersion {
+  id        String   @id @default(cuid())
+  version   Int
+  title     String
+  content   String   @db.Text
+  tags      String[]
+  message   String?
+  createdAt DateTime @default(now())
+
+  articleId String
+  article   WikiArticle @relation(fields: [articleId], references: [id], onDelete: Cascade)
+
+  actorId   String?
+  actor     User?    @relation("WikiVersionActor", fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@unique([articleId, version])
+  @@index([articleId])
+}
+
+model HelpArticle {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  title       String
+  content     String   @db.Text
+  category    String
+  tags        String[]
+  sortOrder   Int      @default(0)
+  adminOnly   Boolean  @default(false)
+  isPublished Boolean  @default(true)
+
+  // Seed tracking
+  sourceFile  String?  @unique
+  sourceHash  String?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Last editor (for admin UI edits)
+  lastEditedById String?
+  lastEditedBy   User?   @relation(fields: [lastEditedById], references: [id], onDelete: SetNull)
+
+  @@index([category])
+  @@index([sourceFile])
+}
+
+// ============================================================================
+// HEALTH PROTOCOLS (Routines)
+// ============================================================================
+
+model Routine {
+  id             String    @id @default(cuid())
+  title          String
+  description    String?
+  cronExpression String    @default("daily") @map("cron_expression")
+  isActive       Boolean   @default(true)    @map("is_active")
+  lastGenerated  DateTime?                   @map("last_generated")
+  nextDue        DateTime?                   @map("next_due")
+  color          String?                     // Hex color for card display
+  estimatedMins  Int?                        @map("estimated_mins")
+  routineType    String    @default("static") @map("protocol_type") // "static" | "dynamic"
+  startDate      DateTime?                   @map("start_date")     // when dynamic routine begins
+  totalDays      Int?                        @map("total_days")     // duration for dynamic routines
+
+  // Fields from RecurringTemplate (for simple routines with no windows)
+  targetTime               String?   @map("target_time")
+  dueByTime                String?   @map("due_by_time")
+  skipStreak               Int       @default(0) @map("skip_streak")
+  taskDefaults             Json?     @map("task_defaults")
+  goalId                   String?   @map("goal_id")
+  goal                     Goal?     @relation(fields: [goalId], references: [id], onDelete: SetNull)
+  progressionBaseValue     Int?      @map("progression_base_value")
+  progressionIncrement     Int?      @map("progression_increment")
+  progressionUnit          String?   @map("progression_unit")
+  progressionFrequency     String?   @map("progression_frequency")
+  progressionStartDate     DateTime? @map("progression_start_date")
+
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  areaId String?
+  area   Area?  @relation(fields: [areaId], references: [id], onDelete: SetNull)
+
+  // Sleep tracker fields
+  targetBedtime  String?   @map("target_bedtime")    // "23:00" HH:MM
+  targetWakeTime String?   @map("target_wake_time")   // "07:00" HH:MM
+
+  windows   RoutineWindow[]
+  logs      RoutineLog[]
+  tasks     Task[]
+  sleepLogs SleepLog[]
+
+  @@map("HealthProtocol")
+  @@index([userId])
+  @@index([isActive])
+}
+
+model RoutineWindow {
+  id         String @id @default(cuid())
+  routineId  String @map("protocolId")
+  routine    Routine @relation(fields: [routineId], references: [id], onDelete: Cascade)
+  title      String               // "Morning — Empty Stomach"
+  targetTime String?              // "07:00" (display/sort hint)
+  sortOrder  Int    @default(0)
+  constraint String?              // "empty_stomach", "with_food", "post_workout"
+  windowType String @default("general") @map("window_type")
+
+  items RoutineItem[]
+  logs  RoutineLog[]
+
+  @@map("HealthWindow")
+  @@index([routineId])
+}
+
+model RoutineItem {
+  id       String @id @default(cuid())
+  windowId String
+  window   RoutineWindow @relation(fields: [windowId], references: [id], onDelete: Cascade)
+  name     String               // checklist item name
+  dosage   String?              // "5g", "2 caps" (static dosage)
+  form     String?              // "powder", "capsule", "softgel", "liquid", "tablet"
+  sortOrder Int   @default(0)
+  notes    String?
+  rampSchedule Json?  @map("ramp_schedule") // dynamic dosing: { type: "step", steps: [...] }
+
+  @@map("HealthItem")
+  @@index([windowId])
+}
+
+model RoutineLog {
+  id          String   @id @default(cuid())
+  routineId   String   @map("protocolId")
+  routine     Routine @relation(fields: [routineId], references: [id], onDelete: Cascade)
+  windowId    String
+  window      RoutineWindow @relation(fields: [windowId], references: [id], onDelete: Cascade)
+  date        DateTime                      // date only (start of day)
+  dayNumber   Int?        @map("day_number") // which day of a dynamic routine
+  status      String                        // "completed", "skipped", "missed", "partial"
+  reason      String?                       // optional reason for skip/miss
+  completedAt DateTime?
+  itemsTaken  Json?       @map("items_taken") // null = all items, array of item IDs = partial
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@map("HealthLog")
+  @@unique([routineId, windowId, date])
+  @@index([userId])
+  @@index([routineId, date])
+}
+
+model SleepLog {
+  id              String    @id @default(cuid())
+  routineId       String    @map("routine_id")
+  routine         Routine   @relation(fields: [routineId], references: [id], onDelete: Cascade)
+  date            DateTime                          // date only (the "evening" date)
+  bedtime         DateTime?                         // actual bedtime timestamp
+  wakeTime        DateTime? @map("wake_time")       // actual wake timestamp
+  targetBedtime   String?   @map("target_bedtime")  // snapshot of target at time of logging
+  targetWakeTime  String?   @map("target_wake_time") // snapshot of target at time of logging
+  durationMins    Int?      @map("duration_mins")    // computed: wakeTime - bedtime in minutes
+  bedtimeOnTime   Boolean?  @map("bedtime_on_time")  // was bedtime at or before target?
+  wakeOnTime      Boolean?  @map("wake_on_time")     // was wake at or before target?
+
+  userId          String
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@unique([routineId, date])
+  @@index([userId])
+  @@index([routineId, date])
+}
+
+model WeeklyReview {
+  id          String       @id @default(cuid())
+  status      ReviewStatus @default(IN_PROGRESS)
+  weekOf      DateTime     // The Monday of the review week
+  notes       String?      @db.Text
+  checklist    Json?        // Tracks which steps are completed
+  completedAt  DateTime?
+  aiCoachUsed  Boolean      @default(false)
+  aiSummary    String?      @db.Text
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([weekOf])
+}
+
+model HorizonReview {
+  id          String              @id @default(cuid())
+  type        HorizonReviewType
+  status      ReviewStatus        @default(IN_PROGRESS)
+  checklist   Json?
+  notes       Json?
+  completedAt DateTime?
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([type])
+}
+
+// ============================================================================
+// PROJECT TEMPLATES
+// ============================================================================
+
+model ProjectTemplate {
+  id          String      @id @default(cuid())
+  title       String
+  description String?     @db.Text
+  type        ProjectType @default(SEQUENTIAL)
+  outcome     String?
+  icon        String?
+
+  // System template tracking (same pattern as HelpArticle)
+  isSystem        Boolean     @default(false)
+  isGloballyHidden Boolean    @default(false)
+  sourceFile  String?     @unique
+  sourceHash  String?
+
+  // User ownership (null for system templates)
+  userId      String?
+  user        User?       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Team ownership (null for personal/system templates)
+  teamId      String?
+  team        Team?       @relation(fields: [teamId], references: [id], onDelete: SetNull)
+
+  // Variable placeholders (e.g., ["destination", "travel_dates"])
+  variables   String[]
+
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  taskTemplates       ProjectTaskTemplate[]
+  subProjectTemplates ProjectSubTemplate[]
+  hiddenBy            HiddenTemplate[]
+
+  @@index([userId])
+  @@index([teamId])
+  @@index([isSystem])
+}
+
+model HiddenTemplate {
+  id         String   @id @default(cuid())
+  userId     String
+  templateId String
+  createdAt  DateTime @default(now())
+
+  user     User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  template ProjectTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, templateId])
+  @@index([userId])
+}
+
+model ProjectTaskTemplate {
+  id            String       @id @default(cuid())
+  title         String
+  notes         String?      @db.Text
+  estimatedMins Int?
+  energyLevel   EnergyLevel?
+  sortOrder     Int          @default(0)
+
+  // Context is stored by name (not ID) for portability across users
+  contextName   String?
+
+  templateId    String
+  template      ProjectTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+
+  // Optional: which sub-project this task belongs to (null = top-level project)
+  subProjectTemplateId String? @map("sub_project_template_id")
+  subProjectTemplate   ProjectSubTemplate? @relation(fields: [subProjectTemplateId], references: [id], onDelete: SetNull)
+
+  @@index([templateId])
+  @@index([subProjectTemplateId])
+}
+
+model ProjectSubTemplate {
+  id          String      @id @default(cuid())
+  title       String
+  type        ProjectType @default(SEQUENTIAL)
+  outcome     String?
+  sortOrder   Int         @default(0)
+
+  templateId  String
+  template    ProjectTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+
+  tasks       ProjectTaskTemplate[]
+
+  @@index([templateId])
+}
+
+// ============================================================================
+// IMPORT / EXPORT
+// ============================================================================
+
+model ImportJob {
+  id             String          @id @default(cuid())
+  status         ImportJobStatus @default(PENDING)
+  source         String          // "tandem_json", "todoist_csv", "generic_csv"
+  fileName       String          // Original upload filename
+  totalItems     Int             @default(0)
+  processedItems Int             @default(0)
+  createdItems   Int             @default(0)
+  skippedItems   Int             @default(0)
+  errorCount     Int             @default(0)
+  errors         Json?           // Array of { row: number, field: string, message: string }
+  mapping        Json?           // Column mapping for CSV imports
+  preview        Json?           // Preview data shown before confirmation
+  confirmedAt    DateTime?       // When user confirmed after preview
+  completedAt    DateTime?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([status])
+}
+
+// ============================================================================
+// COLLABORATION
+// ============================================================================
+
+model ProjectMember {
+  id        String      @id @default(cuid())
+  role      ProjectRole @default(COLLABORATOR)
+  createdAt DateTime    @default(now())
+
+  userId    String
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, projectId])
+  @@index([userId])
+  @@index([projectId])
+}
+
+// ============================================================================
+// TEAMS
+// ============================================================================
+
+model Team {
+  id            String   @id @default(cuid())
+  name          String
+  description   String?  @db.Text
+  icon          String?  // Emoji or short icon string
+  parentTeamId  String?  @map("parent_team_id") // v1.2 forward-compat
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  createdById String?  @map("created_by_id")
+  createdBy   User?    @relation("TeamsCreated", fields: [createdById], references: [id], onDelete: SetNull)
+
+  // Self-relation for future hierarchy (v1.2)
+  parentTeam    Team?    @relation("TeamHierarchy", fields: [parentTeamId], references: [id], onDelete: SetNull)
+  childTeams    Team[]   @relation("TeamHierarchy")
+
+  members            TeamMember[]
+  projects           Project[]
+  wikiArticles       WikiArticle[]
+  events             TeamEvent[]
+  rsvpEvents         Event[]        @relation("EventTeam")
+  projectTemplates   ProjectTemplate[]
+
+  @@index([createdById])
+  @@index([parentTeamId])
+}
+
+model TeamMember {
+  id       String   @id @default(cuid())
+  role     TeamRole @default(MEMBER)
+  label    String?  // Optional role label (e.g. "Design Lead")
+  joinedAt DateTime @default(now())
+
+  teamId String
+  team   Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([teamId, userId])
+  @@index([userId])
+}
+
+model TeamEvent {
+  id        String        @id @default(cuid())
+  teamId    String
+  team      Team          @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  eventType TeamEventType
+  actorType ActorType     @default(USER)
+  actorId   String?
+  actor     User?         @relation("TeamEvents", fields: [actorId], references: [id], onDelete: SetNull)
+
+  changes   Json
+  message   String?
+  source    EventSource   @default(MANUAL)
+  triggeredBy String?
+
+  createdAt DateTime      @default(now())
+
+  @@index([teamId, createdAt])
+  @@index([actorId, createdAt])
+}
+
+// ============================================================================
+// HISTORY / EVENT SOURCING
+// ============================================================================
+
+model TaskEvent {
+  id          String        @id @default(cuid())
+  taskId      String
+  task        Task          @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  eventType   TaskEventType
+  actorType   ActorType     @default(USER)
+  actorId     String?
+  actor       User?         @relation(fields: [actorId], references: [id], onDelete: SetNull)
+
+  changes     Json          // { field: { old: value, new: value } }
+  message     String?       // Optional commit-message-style note
+  source      EventSource   @default(MANUAL)
+  triggeredBy String?       // ID of the event that caused this (cascade chain)
+
+  createdAt   DateTime      @default(now())
+
+  @@index([taskId, createdAt])
+  @@index([actorId, createdAt])
+  @@index([eventType, createdAt])
+  @@index([triggeredBy])
+}
+
+model ProjectEvent {
+  id          String           @id @default(cuid())
+  projectId   String
+  project     Project          @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  eventType   ProjectEventType
+  actorType   ActorType        @default(USER)
+  actorId     String?
+  actor       User?            @relation(fields: [actorId], references: [id], onDelete: SetNull)
+
+  changes     Json
+  message     String?
+  source      EventSource      @default(MANUAL)
+  triggeredBy String?
+
+  createdAt   DateTime         @default(now())
+
+  @@index([projectId, createdAt])
+  @@index([actorId, createdAt])
+}
+
+model InboxEvent {
+  id          String         @id @default(cuid())
+  inboxItemId String
+  inboxItem   InboxItem      @relation(fields: [inboxItemId], references: [id], onDelete: Cascade)
+
+  eventType   InboxEventType
+  actorType   ActorType      @default(USER)
+  actorId     String?
+  actor       User?          @relation(fields: [actorId], references: [id], onDelete: SetNull)
+
+  changes     Json
+  message     String?
+  source      EventSource    @default(MANUAL)
+
+  createdAt   DateTime       @default(now())
+
+  @@index([inboxItemId, createdAt])
+}
+
+model TaskSnapshot {
+  id         String         @id @default(cuid())
+  taskId     String
+  task       Task           @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  state      Json           // Complete task object as JSON
+  reason     SnapshotReason
+  eventId    String?        // The event that triggered this snapshot
+
+  createdAt  DateTime       @default(now())
+
+  @@index([taskId, createdAt])
+}
+
+// ============================================================================
+// PM FEATURES — EXPLICIT DEPENDENCIES
+// ============================================================================
+
+model TaskDependency {
+  id            String         @id @default(cuid())
+  predecessorId String         @map("predecessor_id")
+  predecessor   Task           @relation("Predecessor", fields: [predecessorId], references: [id], onDelete: Cascade)
+  successorId   String         @map("successor_id")
+  successor     Task           @relation("Successor", fields: [successorId], references: [id], onDelete: Cascade)
+  type          DependencyType @default(FINISH_TO_START)
+  lagMinutes    Int            @default(0) @map("lag_minutes")
+
+  @@unique([predecessorId, successorId])
+  @@index([predecessorId])
+  @@index([successorId])
+  @@map("task_dependencies")
+}
+
+// ============================================================================
+// PM FEATURES — BASELINE SNAPSHOTS
+// ============================================================================
+
+model BaselineSnapshot {
+  id           String   @id @default(cuid())
+  projectId    String   @map("project_id")
+  project      Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  userId       String   @map("user_id")
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name         String
+  snapshotData Json     @map("snapshot_data")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  @@index([projectId])
+  @@map("baseline_snapshots")
+}
+
+// ============================================================================
+// OAUTH 2.1 AUTHORIZATION SERVER
+// ============================================================================
+
+model OAuthClient {
+  id            String   @id @default(cuid())
+  clientId      String   @unique // UUID, public identifier
+  clientSecret  String?  // bcrypt-hashed (null for public clients)
+  clientName    String   @default("Unknown Client")
+  redirectUris  String[] // Registered redirect URIs
+  grantTypes    String[] @default(["authorization_code", "refresh_token"])
+  responseTypes String[] @default(["code"])
+  tokenEndpointAuthMethod String @default("client_secret_post")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  authCodes     OAuthAuthorizationCode[]
+  accessTokens  OAuthAccessToken[]
+  refreshTokens OAuthRefreshToken[]
+
+  @@index([clientId])
+}
+
+model OAuthAuthorizationCode {
+  id                  String   @id @default(cuid())
+  code                String   @unique // bcrypt-hashed authorization code
+  prefix              String   // First 8 chars of raw code, for lookup
+  redirectUri         String   // Must match on exchange
+  scope               String   @default("")
+  codeChallenge       String   // PKCE S256 challenge
+  codeChallengeMethod String   @default("S256")
+  state               String?  // Opaque state from client
+  used                Boolean  @default(false)
+  expiresAt           DateTime // 10-minute expiry
+  createdAt           DateTime @default(now())
+
+  clientId String
+  client   OAuthClient @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  userId   String
+  user     User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([prefix])
+  @@index([clientId])
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model OAuthAccessToken {
+  id        String   @id @default(cuid())
+  token     String   @unique // bcrypt-hashed
+  prefix    String   // First 8 chars for lookup
+  scope     String   @default("")
+  expiresAt DateTime // 1-hour expiry
+  createdAt DateTime @default(now())
+
+  clientId String
+  client   OAuthClient @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  userId   String
+  user     User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([prefix])
+  @@index([clientId])
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model OAuthRefreshToken {
+  id        String   @id @default(cuid())
+  token     String   @unique // bcrypt-hashed
+  prefix    String   // First 8 chars for lookup
+  scope     String   @default("")
+  revoked   Boolean  @default(false)
+  expiresAt DateTime // 30-day expiry
+  createdAt DateTime @default(now())
+
+  clientId String
+  client   OAuthClient @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  userId   String
+  user     User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([prefix])
+  @@index([clientId])
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+// ============================================================================
+// NOTIFICATIONS
+// ============================================================================
+
+model PushSubscription {
+  id        String   @id @default(cuid())
+  endpoint  String   @db.Text
+  p256dh    String
+  auth      String
+  userAgent String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, endpoint])
+  @@index([userId])
+}
+
+model Notification {
+  id          String           @id @default(cuid())
+  type        NotificationType
+  title       String
+  body        String?          @db.Text
+  link        String?
+  isRead      Boolean          @default(false)
+  readAt      DateTime?
+  sentViaPush  Boolean          @default(false)
+  sentViaEmail Boolean          @default(false)
+  createdAt    DateTime         @default(now())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  taskId String?
+  task   Task?  @relation(fields: [taskId], references: [id], onDelete: SetNull)
+
+  @@index([userId, isRead])
+  @@index([userId, createdAt])
+  @@index([taskId])
+}
+
+model NotificationPreference {
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  pushEnabled      Boolean @default(true)
+  pushDueToday     Boolean @default(true)
+  pushDueTomorrow  Boolean @default(false)
+  pushOverdue      Boolean @default(true)
+  pushWeeklyReview Boolean @default(true)
+  pushDecisions    Boolean @default(true)
+  pushDailyDigest  Boolean @default(false)
+
+  reminderTimeHour   Int @default(8)
+  reminderTimeMinute Int @default(0)
+  weeklyReviewDay    Int @default(5)
+  quietHoursStart    Int?
+  quietHoursEnd      Int?
+  timezone           String  @default("America/New_York")
+
+  emailEnabled     Boolean @default(false)
+  emailDailyDigest Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model PasswordSetupToken {
+  id        String    @id @default(cuid())
+  userId    String    @unique
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([token])
+}
+
+// ============================================================================
+// THREADS (Work-Anchored Conversations)
+// ============================================================================
+
+model Thread {
+  id            String        @id @default(cuid())
+  purpose       ThreadPurpose
+  title         String
+  isResolved    Boolean       @default(false)
+  resolvedAt    DateTime?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  // Anchor: exactly one of taskId or projectId must be set
+  taskId    String?
+  task      Task?    @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  projectId String?
+  project   Project? @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  // Creator & resolver
+  createdById  String   @map("created_by_id")
+  createdBy    User     @relation("ThreadCreator", fields: [createdById], references: [id], onDelete: Cascade)
+  resolvedById String?  @map("resolved_by_id")
+  resolvedBy   User?    @relation("ThreadResolver", fields: [resolvedById], references: [id], onDelete: SetNull)
+
+  messages        ThreadMessage[]
+  mentions        ThreadMention[]
+  waitingFors     WaitingFor[]
+  decisionRequest DecisionRequest?
+
+  @@index([taskId])
+  @@index([projectId])
+  @@index([createdById])
+  @@index([isResolved])
+}
+
+model ThreadMessage {
+  id        String   @id @default(cuid())
+  content   String   @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  isEdited  Boolean  @default(false)
+
+  threadId String
+  thread   Thread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  authorId String
+  author   User   @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  mentions  ThreadMention[]
+  reactions ThreadReaction[]
+
+  @@index([threadId, createdAt])
+  @@index([authorId])
+}
+
+model ThreadMention {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+
+  threadId  String
+  thread    Thread        @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  messageId String
+  message   ThreadMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([messageId, userId])
+  @@index([threadId])
+  @@index([userId])
+}
+
+model ThreadReaction {
+  id        String   @id @default(cuid())
+  emoji     String
+  createdAt DateTime @default(now())
+
+  messageId String
+  message   ThreadMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([messageId, userId, emoji])
+  @@index([messageId])
+}
+
+// ============================================================================
+// DECISIONS (Structured Decision-Making)
+// ============================================================================
+
+model DecisionRequest {
+  id           String         @id @default(cuid())
+  question     String         @db.Text
+  context      String?        @db.Text
+  status       DecisionStatus @default(OPEN)
+  decisionType DecisionType   @default(APPROVAL)
+  deadline     DateTime?
+  resolution   String?        @db.Text
+  resolvedAt   DateTime?
+  wikiSlug     String?        @map("wiki_slug")
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  // Link to thread (decisions live on threads)
+  threadId String @unique @map("thread_id")
+  thread   Thread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+
+  // Requester
+  requesterId String @map("requester_id")
+  requester   User   @relation("DecisionRequester", fields: [requesterId], references: [id], onDelete: Cascade)
+
+  // === Decision Proposal fields (Phase 2) ===
+  description  String?        @db.Text   // Full context/background for proposals
+  outcome      String?        @db.Text   // The actual decision (populated when DECIDED)
+  rationale    String?        @db.Text   // Why this was decided
+  decidedAt    DateTime?      @map("decided_at")
+
+  // Wiki integration for proposals
+  wikiArticleId String?       @map("wiki_article_id")
+  wikiArticle   WikiArticle?  @relation("DecisionWikiArticle", fields: [wikiArticleId], references: [id], onDelete: SetNull)
+  wikiSection   String?       @map("wiki_section")
+
+  // Scoping — optional project-level scope for proposals
+  projectId    String?        @map("proposal_project_id")
+  project      Project?       @relation("DecisionProposalProject", fields: [projectId], references: [id], onDelete: SetNull)
+
+  respondents    DecisionRespondent[]
+  responses      DecisionResponse[]
+  options        DecisionOption[]
+  optionVotes    DecisionOptionVote[]
+  contributions  DecisionContribution[]
+  inputRequests  DecisionInputRequest[]
+  events         DecisionEvent[]
+
+  @@index([requesterId])
+  @@index([status])
+  @@index([deadline])
+  @@index([projectId])
+}
+
+model DecisionRespondent {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+
+  decisionId String
+  decision   DecisionRequest @relation(fields: [decisionId], references: [id], onDelete: Cascade)
+  userId     String
+  user       User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Auto-generated task for this respondent
+  taskId    String?  @unique @map("task_id")
+  task      Task?    @relation("DecisionRespondentTask", fields: [taskId], references: [id], onDelete: SetNull)
+
+  @@unique([decisionId, userId])
+  @@index([userId])
+}
+
+model DecisionResponse {
+  id        String       @id @default(cuid())
+  vote      DecisionVote
+  comment   String?      @db.Text
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  decisionId String
+  decision   DecisionRequest @relation(fields: [decisionId], references: [id], onDelete: Cascade)
+  userId     String
+  user       User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([decisionId, userId])
+  @@index([decisionId])
+}
+
+model DecisionOption {
+  id          String   @id @default(cuid())
+  label       String
+  description String?  @db.Text
+  sortOrder   Int      @default(0)
+  isChosen    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  decisionId String
+  decision   DecisionRequest @relation(fields: [decisionId], references: [id], onDelete: Cascade)
+  votes      DecisionOptionVote[]
+
+  @@index([decisionId])
+}
+
+model DecisionOptionVote {
+  id        String   @id @default(cuid())
+  comment   String?  @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  decisionId String
+  decision   DecisionRequest @relation(fields: [decisionId], references: [id], onDelete: Cascade)
+  optionId   String
+  option     DecisionOption  @relation(fields: [optionId], references: [id], onDelete: Cascade)
+  voterId    String
+  voter      User            @relation("DecisionOptionVoter", fields: [voterId], references: [id], onDelete: Cascade)
+
+  @@unique([decisionId, voterId])
+  @@index([optionId])
+  @@index([voterId])
+}
+
+model DecisionContribution {
+  id          String   @id @default(cuid())
+  content     String   @db.Text
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  decisionId  String   @map("decision_id")
+  decision    DecisionRequest @relation(fields: [decisionId], references: [id], onDelete: Cascade)
+  authorId    String   @map("author_id")
+  author      User     @relation("DecisionContributions", fields: [authorId], references: [id])
+
+  @@index([decisionId])
+  @@index([authorId])
+  @@map("decision_contributions")
+}
+
+// ============================================================================
+// DECISION INPUT REQUESTS (Decision Proposals Phase 2)
+// ============================================================================
+
+model DecisionInputRequest {
+  id          String             @id @default(cuid())
+  decisionId  String             @map("decision_id")
+  decision    DecisionRequest    @relation(fields: [decisionId], references: [id], onDelete: Cascade)
+
+  assigneeId  String             @map("assignee_id")
+  assignee    User               @relation("DecisionInputAssignee", fields: [assigneeId], references: [id])
+
+  type        InputRequestType   @default(RESEARCH)
+  prompt      String?            @db.Text
+  isRequired  Boolean            @default(true) @map("is_required")
+  status      InputRequestStatus @default(PENDING)
+  respondedAt DateTime?          @map("responded_at")
+
+  // Auto-generated task link
+  taskId      String?            @unique @map("task_id")
+  task        Task?              @relation("DecisionInputTask", fields: [taskId], references: [id], onDelete: SetNull)
+
+  createdAt   DateTime           @default(now()) @map("created_at")
+
+  @@index([decisionId])
+  @@index([assigneeId])
+  @@index([status])
+  @@map("decision_input_requests")
+}
+
+model DecisionEvent {
+  id          String            @id @default(cuid())
+  decisionId  String            @map("decision_id")
+  decision    DecisionRequest   @relation(fields: [decisionId], references: [id], onDelete: Cascade)
+
+  actorId     String            @map("actor_id")
+  actor       User              @relation("DecisionEventActor", fields: [actorId], references: [id])
+
+  type        DecisionEventType
+  details     Json?
+  message     String?
+
+  createdAt   DateTime          @default(now()) @map("created_at")
+
+  @@index([decisionId])
+  @@index([actorId])
+  @@map("decision_events")
+}
+
+// ============================================================================
+// TIME AUDIT CHALLENGE
+// ============================================================================
+
+model TimeAuditChallenge {
+  id          String          @id @default(cuid())
+  userId      String
+  user        User            @relation(fields: [userId], references: [id])
+  startTime   DateTime
+  endTime     DateTime
+  status      TimeAuditStatus @default(ACTIVE)
+  pausedAt    DateTime?
+  totalPaused Int             @default(0)
+  summary     Json?
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  entries     TimeAuditEntry[]
+
+  @@index([userId, status])
+  @@index([userId, createdAt])
+}
+
+model TimeAuditEntry {
+  id            String             @id @default(cuid())
+  challengeId   String
+  challenge     TimeAuditChallenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+  intervalStart DateTime
+  intervalEnd   DateTime
+  tags          String[]
+  note          String?
+  taskId        String?
+  task          Task?              @relation(fields: [taskId], references: [id], onDelete: SetNull)
+  createdAt     DateTime           @default(now())
+
+  @@index([challengeId, intervalStart])
+}
+
+// ============================================================================
+// FOCUS TIMER
+// ============================================================================
+
+model TaskTimerSession {
+  id          String    @id @default(cuid())
+  taskId      String    @map("task_id")
+  userId      String    @map("user_id")
+  startedAt   DateTime  @map("started_at")
+  pausedAt    DateTime? @map("paused_at")
+  endedAt     DateTime? @map("ended_at")
+  durationMin Int       @default(0) @map("duration_min")
+  isActive    Boolean   @default(true) @map("is_active")
+
+  task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("task_timer_sessions")
+  @@index([taskId])
+  @@index([userId, isActive])
+}
+
+// ============================================================================
+// EVENT RSVP & COORDINATION
+// ============================================================================
+
+model Event {
+  id          String    @id @default(cuid())
+  title       String
+  description String?   @db.Text
+  eventDate   DateTime  @map("event_date")
+  lockDate    DateTime? @map("lock_date")
+  isLocked    Boolean   @default(false) @map("is_locked")
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  projectId String  @unique @map("project_id")
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  teamId String? @map("team_id")
+  team   Team?   @relation("EventTeam", fields: [teamId], references: [id], onDelete: SetNull)
+
+  ownerId String @map("owner_id")
+  owner   User   @relation("EventOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+
+  fields      EventField[]
+  invitations EventInvitation[]
+  responses   EventResponse[]
+  triggers    EventTrigger[]
+  claimLocks  ClaimLock[]
+
+  @@index([ownerId])
+  @@index([teamId])
+  @@index([eventDate])
+}
+
+model EventField {
+  id        String         @id @default(cuid())
+  type      EventFieldType
+  label     String
+  isRequired Boolean       @default(false) @map("is_required")
+  isOrgOnly  Boolean       @default(false) @map("is_org_only")
+  sortOrder  Int           @default(0) @map("sort_order")
+  options    Json?
+
+  eventId String @map("event_id")
+  event   Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@index([eventId])
+}
+
+model EventInvitation {
+  id         String           @id @default(cuid())
+  email      String
+  role       String?
+  token      String           @unique @default(cuid())
+  status     InvitationStatus @default(PENDING)
+  sentAt     DateTime         @default(now()) @map("sent_at")
+  acceptedAt DateTime?        @map("accepted_at")
+
+  eventId String @map("event_id")
+  event   Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  userId String? @map("user_id")
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([eventId])
+  @@index([email])
+  @@index([token])
+}
+
+model EventResponse {
+  id          String           @id @default(cuid())
+  attendance  AttendanceStatus
+  fieldValues Json             @default("{}") @map("field_values")
+  submittedAt DateTime         @default(now()) @map("submitted_at")
+  updatedAt   DateTime         @updatedAt
+
+  eventId String @map("event_id")
+  event   Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  userId String @map("user_id")
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, userId])
+  @@index([eventId])
+}
+
+model EventTrigger {
+  id         String    @id @default(cuid())
+  condition  String
+  taskTitle  String    @map("task_title")
+  fired      Boolean   @default(false)
+  firedAt    DateTime? @map("fired_at")
+
+  eventId    String  @map("event_id")
+  event      Event   @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  assigneeId String? @map("assignee_id")
+  assignee   User?   @relation("EventTriggerAssignee", fields: [assigneeId], references: [id], onDelete: SetNull)
+
+  @@index([eventId])
+}
+
+model ClaimLock {
+  id        String   @id @default(cuid())
+  fieldId   String   @map("field_id")
+  optionKey String   @map("option_key")
+  expiresAt DateTime @map("expires_at")
+
+  eventId String @map("event_id")
+  event   Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  userId String @map("user_id")
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([fieldId, optionKey])
+  @@index([eventId])
+  @@index([expiresAt])
+}
+
+// ============================================================================
+// DELEGATION
+// ============================================================================
+
+model Delegation {
+  id              String           @id @default(cuid())
+
+  // The task being delegated
+  taskId          String           @unique @map("task_id")
+  task            Task             @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  // Parties
+  delegatorId     String           @map("delegator_id")
+  delegator       User             @relation("DelegationsGiven", fields: [delegatorId], references: [id])
+  delegateeId     String           @map("delegatee_id")
+  delegatee       User             @relation("DelegationsReceived", fields: [delegateeId], references: [id])
+
+  // State machine
+  status          DelegationStatus @default(PENDING)
+
+  // Delegator's routing preference for recipient
+  landingZone     DelegationLanding @default(INBOX)
+
+  // Optional message from delegator
+  note            String?
+
+  // Timestamps
+  sentAt          DateTime         @default(now()) @map("sent_at")
+  viewedAt        DateTime?        @map("viewed_at")
+  respondedAt     DateTime?        @map("responded_at")
+  completedAt     DateTime?        @map("completed_at")
+
+  // Decline reason (optional)
+  declineReason   String?          @map("decline_reason")
+
+  // Link back to delegator's WaitingFor record
+  waitingForId    String?          @unique @map("waiting_for_id")
+  waitingFor      WaitingFor?      @relation(fields: [waitingForId], references: [id])
+
+  @@index([delegatorId])
+  @@index([delegateeId])
+  @@index([status])
+  @@map("delegations")
+}

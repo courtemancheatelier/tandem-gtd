@@ -1,0 +1,46 @@
+---
+title: "Async Spec Review Workflow via GitHub"
+---
+
+flowchart TD
+    Start([🟢 You have a spec to write]) --> A
+
+    A["<b>1. Create a Branch</b><br/>git checkout -b spec/feature-name"] --> B
+
+    B["<b>2. Write the Spec Doc</b><br/>Add your content + mark open questions<br/><i>Use &lt;!-- QUESTION FOR MATT: ... --&gt; comments</i><br/><i>or a checklist with ❓ items</i>"] --> C
+
+    C["<b>3. Commit &amp; Push</b><br/>git add . && git commit -m 'Draft spec with open questions'<br/>git push origin spec/feature-name"] --> D
+
+    D["<b>4. Open a Pull Request</b><br/>Title: 'REVIEW: Feature Spec — needs your input'<br/>Assign brother as Reviewer<br/>Use PR description to summarize open questions"] --> E
+
+    E(["📬 Brother gets notified via GitHub"])
+
+    E --> F["<b>5. Brother Reviews the PR</b><br/>• Reads the spec<br/>• Answers open questions inline or in commits<br/>• Pushes new commits to the SAME branch"]
+
+    F --> G{"<b>6. Brother's Decision</b>"}
+
+    G -->|"Has answers /<br/>changes to propose"| H["<b>Pushes commits &amp; re-requests your review</b><br/>You get a GitHub notification:<br/><i>'Your review was requested'</i>"]
+
+    G -->|"Needs more info<br/>from you first"| I["<b>Leaves comments on specific lines</b><br/>Marks review as 'Request Changes'<br/>You get notified"]
+
+    H --> J(["📬 You get notified"])
+    I --> J
+
+    J --> K["<b>7. You Review His Changes</b><br/>• Read his answers and edits<br/>• Check the diff for what changed<br/>• Respond to any comment threads"]
+
+    K --> L{"<b>8. Your Decision</b>"}
+
+    L -->|"✅ Looks good!"| M["<b>Approve &amp; Merge</b><br/>Click 'Approve' then 'Merge Pull Request'<br/>Spec is now on main branch"]
+
+    L -->|"🔄 Follow-up needed"| N["<b>Add follow-up comments or commits</b><br/>Push more changes to the same branch<br/>Re-request his review"]
+
+    N --> E
+
+    M --> Done([🏁 Spec is finalized on main])
+
+    style Start fill:#22c55e,color:#fff,stroke:none
+    style Done fill:#3b82f6,color:#fff,stroke:none
+    style E fill:#fbbf24,color:#000,stroke:none
+    style J fill:#fbbf24,color:#000,stroke:none
+    style G fill:#f97316,color:#fff,stroke:none
+    style L fill:#f97316,color:#fff,stroke:none
