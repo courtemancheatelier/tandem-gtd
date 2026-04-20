@@ -1,0 +1,11 @@
+{
+  "name": "tandem-email-inbound",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "postal-mime": "^2.3.2"
+  },
+  "devDependencies": {
+    "wrangler": "^4.83.0"
+  }
+}

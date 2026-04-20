@@ -1,0 +1,62 @@
+title: Plan a Trip
+description: >
+  Everything you need to organize a trip, from booking flights to packing.
+  Works for vacations, business travel, or weekend getaways.
+type: SEQUENTIAL
+outcome: "Trip to {destination} is fully planned and booked"
+icon: plane
+variables:
+  - destination
+  - travel_dates
+
+tasks:
+  - title: "Research {destination} — flights, accommodation, activities"
+    notes: "Compare options, read reviews, check visa requirements"
+    estimatedMins: 60
+    energyLevel: HIGH
+    contextName: "@Computer"
+
+  - title: "Book flights to {destination}"
+    estimatedMins: 30
+    energyLevel: MEDIUM
+    contextName: "@Computer"
+
+  - title: "Book accommodation for {travel_dates}"
+    estimatedMins: 30
+    energyLevel: MEDIUM
+    contextName: "@Computer"
+
+  - title: "Plan itinerary — daily activities and reservations"
+    estimatedMins: 45
+    energyLevel: HIGH
+    contextName: "@Computer"
+
+  - title: "Book any required tours or tickets"
+    estimatedMins: 20
+    energyLevel: LOW
+    contextName: "@Computer"
+
+  - title: "Arrange travel insurance"
+    estimatedMins: 15
+    energyLevel: LOW
+    contextName: "@Computer"
+
+  - title: "Create packing list"
+    estimatedMins: 15
+    energyLevel: LOW
+    contextName: "@Anywhere"
+
+  - title: "Pack bags"
+    estimatedMins: 60
+    energyLevel: MEDIUM
+    contextName: "@Home"
+
+  - title: "Confirm all reservations 48 hours before departure"
+    estimatedMins: 15
+    energyLevel: LOW
+    contextName: "@Computer"
+
+  - title: "Download offline maps and boarding passes"
+    estimatedMins: 10
+    energyLevel: LOW
+    contextName: "@Phone"

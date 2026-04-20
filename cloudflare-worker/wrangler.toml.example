@@ -1,0 +1,46 @@
+# Cloudflare Email Worker — Email-to-Inbox Capture
+#
+# Copy this file to `wrangler.toml` and fill in your values:
+#
+#     cp wrangler.toml.example wrangler.toml
+#
+# `wrangler.toml` is gitignored — your deployment config stays local.
+# Secrets (WEBHOOK_SECRET_BETA, WEBHOOK_SECRET_PROD) are set separately via
+# `wrangler secret put`, not in this file.
+
+name = "tandem-email-inbound"
+main = "email-inbound.js"
+compatibility_date = "2024-01-01"
+workers_dev = false   # Email Routing invokes the worker directly; no public HTTP route needed
+
+[vars]
+# Local-part prefix per Tandem instance. The Worker routes
+# {prefix}+{token}@your-domain.com to the matching instance. Must match
+# EMAIL_INBOX_LOCAL_PREFIX in the Tandem instance's .env (without the "+").
+ROUTE_LOCAL_BETA = "inbox-beta"
+ROUTE_LOCAL_PROD = "inbox-prod"
+
+# Base URL of each Tandem instance that should receive captured emails.
+TANDEM_URL_BETA  = "https://beta.example.com"
+TANDEM_URL_PROD  = "https://example.com"
+
+# WARNING — FALLBACK_FORWARD
+# Since this Worker is configured as the Cloudflare zone catch-all, every
+# email to any address on your zone that does NOT match a ROUTE_LOCAL_*
+# prefix is forwarded here. Misconfiguring this silently redirects all
+# your domain's mail (including password-reset emails from other services
+# that mail your domain) to the wrong mailbox.
+#
+# - Set this to a mailbox YOU control.
+# - The address must be a Cloudflare-verified destination
+#   (Email Routing → Destination addresses → verify via emailed token).
+# - If you don't want any fallback, remove this line; unmatched mail will
+#   be rejected at SMTP instead of forwarded.
+FALLBACK_FORWARD = "ops@example.com"
+
+# Secrets (set via `wrangler secret put`, never commit values):
+#   WEBHOOK_SECRET_BETA = matches EMAIL_WEBHOOK_SECRET in the beta instance's .env
+#   WEBHOOK_SECRET_PROD = matches EMAIL_WEBHOOK_SECRET in the prod instance's .env
+#
+# Example:
+#   printf '<your-64-hex-secret>' | wrangler secret put WEBHOOK_SECRET_BETA

@@ -1,0 +1,9 @@
+# Placeholder — add the following icon files here:
+#
+#   icon-192.png          — 192x192 standard icon
+#   icon-512.png          — 512x512 standard icon
+#   icon-maskable-192.png — 192x192 maskable icon (safe zone padding)
+#   icon-maskable-512.png — 512x512 maskable icon (safe zone padding)
+#
+# These are referenced by /manifest.json and are required for
+# PWA installability on Chrome, Edge, and mobile browsers.

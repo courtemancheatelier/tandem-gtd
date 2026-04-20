@@ -1,0 +1,426 @@
+title: "Wedding Planning — {partner_1} & {partner_2}"
+description: >
+  Comprehensive wedding planning template with 6 phases covering everything
+  from venue selection to post-wedding wrap-up. Leverages Event RSVP, cascade,
+  delegation, and team features for a fully collaborative planning experience.
+type: PARALLEL
+outcome: "{partner_1} & {partner_2}'s wedding is beautifully planned and celebrated"
+icon: heart
+variables:
+  - partner_1
+  - partner_2
+  - wedding_date
+
+# Metadata for post-instantiation setup (team roles, RSVP fields, wiki, threads)
+meta:
+  teamRoles:
+    - Couple
+    - Maid of Honor
+    - Best Man
+    - Bridesmaid
+    - Groomsman
+    - Family
+    - Guest
+  rsvpFields:
+    - label: "Party Size"
+      type: HEADCOUNT
+      isRequired: true
+      sortOrder: 1
+    - label: "Meal Choice"
+      type: SINGLE_SELECT
+      isRequired: true
+      sortOrder: 2
+      options: ["Beef", "Chicken", "Fish", "Vegetarian", "Vegan"]
+    - label: "Dietary Restrictions"
+      type: TEXT
+      isRequired: false
+      sortOrder: 3
+    - label: "Song Request"
+      type: TEXT
+      isRequired: false
+      sortOrder: 4
+    - label: "Notes to the Couple"
+      type: TEXT
+      isRequired: false
+      sortOrder: 5
+  rsvpLockWeeksBefore: 4
+  suggestedThreads:
+    - title: "Venue Options Discussion"
+      purpose: QUESTION
+    - title: "Color Scheme & Theme"
+      purpose: QUESTION
+    - title: "Music & Entertainment Preferences"
+      purpose: QUESTION
+    - title: "Seating Arrangement Ideas"
+      purpose: QUESTION
+    - title: "Budget Check-In"
+      purpose: UPDATE
+  wikiPages:
+    - title: "Vendor Gratuity Guide"
+      slug: "vendor-gratuity-guide"
+      content: |
+        # Vendor Gratuity Guide
+
+        A reference for tipping wedding vendors. Amounts are guidelines — adjust based on service quality, your budget, and local customs.
+
+        ## Ceremony & Reception
+
+        | Vendor | Suggested Gratuity | When to Tip |
+        |---|---|---|
+        | Officiant | $100–$500 (or donation to their institution) | Day of ceremony |
+        | Venue Coordinator | $50–$150 | End of reception |
+        | Catering Staff | 15–20% of food/beverage bill (check if included) | End of reception |
+        | Bartenders | $25–$50 per bartender, or 10–15% of bar tab | End of reception |
+
+        ## Beauty & Attire
+
+        | Vendor | Suggested Gratuity | When to Tip |
+        |---|---|---|
+        | Hair Stylist | 15–25% of service cost | Day of, after styling |
+        | Makeup Artist | 15–25% of service cost | Day of, after makeup |
+        | Tailor / Seamstress | $25–$50 | At final fitting |
+
+        ## Photography & Entertainment
+
+        | Vendor | Suggested Gratuity | When to Tip |
+        |---|---|---|
+        | Photographer | $50–$200 (or gift) | Day of, end of event |
+        | Videographer | $50–$200 (or gift) | Day of, end of event |
+        | DJ | $50–$150 | End of reception |
+        | Live Band | $25–$50 per musician | End of reception |
+
+        ## Transportation & Logistics
+
+        | Vendor | Suggested Gratuity | When to Tip |
+        |---|---|---|
+        | Limo / Shuttle Driver | 15–20% of total bill | End of each ride |
+        | Valet Attendants | $2–$5 per car (or arrange flat fee) | During event |
+        | Delivery Drivers (flowers, cake, rentals) | $10–$20 each | On delivery |
+
+        ## Floral & Decor
+
+        | Vendor | Suggested Gratuity | When to Tip |
+        |---|---|---|
+        | Florist | $20–$50 per delivery person | On delivery/setup |
+        | Lighting / Decor Team | $20–$50 per person | After setup |
+
+        ## Planning
+
+        | Vendor | Suggested Gratuity | When to Tip |
+        |---|---|---|
+        | Wedding Planner | Tip not expected, but a gift or bonus is appreciated | After wedding |
+        | Day-of Coordinator | $50–$200 | End of reception |
+
+        ---
+
+        **Tips for managing gratuities:**
+        - Prepare labeled envelopes in advance with cash
+        - Assign a trusted person (best man, maid of honor, family member) to distribute them
+        - Review vendor contracts — some include gratuity in their fees
+        - Create a task to prepare all tip envelopes in the Final Week phase
+
+subProjects:
+  # ── Phase 1: Foundation (PARALLEL — tasks can happen in any order) ──────────
+  - title: "Phase 1 — Foundation"
+    type: PARALLEL
+    outcome: "Core vendors booked and budget established"
+    tasks:
+      - title: "Set overall wedding budget"
+        notes: "Decide on total budget and allocate across categories (venue, catering, attire, photography, flowers, music, etc.)"
+        estimatedMins: 60
+        energyLevel: HIGH
+        contextName: "@Computer"
+
+      - title: "Create guest list draft"
+        notes: "Compile initial guest list with {partner_1} and {partner_2}'s families. Include addresses for save-the-dates."
+        estimatedMins: 90
+        energyLevel: HIGH
+        contextName: "@Computer"
+
+      - title: "Research and visit potential venues"
+        notes: "Visit at least 3 venues. Check availability for {wedding_date}. Compare pricing, capacity, catering options."
+        estimatedMins: 120
+        energyLevel: HIGH
+        contextName: "@Errands"
+
+      - title: "Book ceremony venue"
+        estimatedMins: 30
+        energyLevel: MEDIUM
+        contextName: "@Phone"
+
+      - title: "Book reception venue"
+        notes: "Confirm date, deposit, and contract terms. Ask about included services (tables, chairs, AV, coordinator)."
+        estimatedMins: 30
+        energyLevel: MEDIUM
+        contextName: "@Phone"
+
+      - title: "Research and book photographer"
+        notes: "Review portfolios, check availability for {wedding_date}, compare packages."
+        estimatedMins: 60
+        energyLevel: MEDIUM
+        contextName: "@Computer"
+
+      - title: "Research and book officiant"
+        estimatedMins: 30
+        energyLevel: MEDIUM
+        contextName: "@Phone"
+
+      - title: "Choose wedding party members"
+        notes: "Ask maid of honor, best man, bridesmaids, and groomsmen"
+        estimatedMins: 15
+        energyLevel: LOW
+        contextName: "@Anywhere"
+
+  # ── Phase 2: Logistics (PARALLEL — independent vendor/planning tracks) ─────
+  - title: "Phase 2 — Logistics"
+    type: PARALLEL
+    outcome: "All major vendors contracted and logistics planned"
+    tasks:
+      - title: "Research and book caterer"
+        notes: "Schedule tastings, get quotes, confirm menu options and dietary accommodation process."
+        estimatedMins: 60
+        energyLevel: MEDIUM
+        contextName: "@Computer"
+
+      - title: "Research and book florist"
+        notes: "Discuss arrangements: bridal bouquet, bridesmaids, boutonnieres, centerpieces, ceremony decor."
+        estimatedMins: 45
+        energyLevel: MEDIUM
+        contextName: "@Computer"
+
+      - title: "Research and book DJ or band"
+        estimatedMins: 45
+        energyLevel: MEDIUM
+        contextName: "@Computer"
+
+      - title: "Research and book videographer"
+        estimatedMins: 30
+        energyLevel: MEDIUM
+        contextName: "@Computer"
+
+      - title: "Order save-the-dates"
+        notes: "Design, print, and mail save-the-dates to full guest list."
+        estimatedMins: 45
+        energyLevel: MEDIUM
+        contextName: "@Computer"
+
+      - title: "Book hotel room block for guests"
+        notes: "Negotiate group rate at nearby hotels. Include info on save-the-dates."
+        estimatedMins: 30
+        energyLevel: LOW
+        contextName: "@Phone"
+
+      - title: "Research and book transportation"
+        notes: "Limo, shuttle, or car service for wedding party and/or guests."
+        estimatedMins: 30
+        energyLevel: LOW
+        contextName: "@Computer"
+
+      - title: "Start wedding registry"
+        notes: "{partner_1} & {partner_2} create registry together."
+        estimatedMins: 60
+        energyLevel: MEDIUM
+        contextName: "@Computer"
+
+      - title: "Shop for wedding attire"
+        notes: "Wedding dress/suit, bridesmaids dresses, groomsmen attire. Allow time for alterations."
+        estimatedMins: 120
+        energyLevel: HIGH
+        contextName: "@Errands"
+
+      - title: "Book hair and makeup artist"
+        notes: "Schedule trial run before the wedding day."
+        estimatedMins: 30
+        energyLevel: LOW
+        contextName: "@Phone"
+
+  # ── Phase 3: Details (SEQUENTIAL — builds on vendor decisions) ─────────────
+  - title: "Phase 3 — Details"
+    type: SEQUENTIAL
+    outcome: "All details finalized and invitations sent"
+    tasks:
+      - title: "Design and order wedding invitations"
+        notes: "Include RSVP deadline (4 weeks before {wedding_date}), venue details, registry info, hotel block."
+        estimatedMins: 60
+        energyLevel: HIGH
+        contextName: "@Computer"
+
+      - title: "Mail wedding invitations"
+        notes: "Send 6–8 weeks before {wedding_date}."
+        estimatedMins: 30
+        energyLevel: LOW
+        contextName: "@Errands"
+
+      - title: "Plan ceremony details"
+        notes: "Readings, vows, music selections, processional order."
+        estimatedMins: 45
+        energyLevel: HIGH
+        contextName: "@Anywhere"
+
+      - title: "Plan reception details"
+        notes: "Table layout, seating chart, first dance, toasts order, cake cutting, bouquet toss."
+        estimatedMins: 60
+        energyLevel: HIGH
+        contextName: "@Computer"
+
+      - title: "Order wedding cake or dessert"
+        notes: "Schedule tasting, choose flavors and design."
+        estimatedMins: 30
+        energyLevel: MEDIUM
+        contextName: "@Errands"
+
+      - title: "Select and order wedding favors"
+        estimatedMins: 30
+        energyLevel: LOW
+        contextName: "@Computer"
+
+      - title: "Plan rehearsal dinner"
+        notes: "Book venue, set menu, create guest list (wedding party + immediate family)."
+        estimatedMins: 45
+        energyLevel: MEDIUM
+        contextName: "@Computer"
+
+      - title: "Purchase wedding rings"
+        estimatedMins: 60
+        energyLevel: MEDIUM
+        contextName: "@Errands"
+
+      - title: "Obtain marriage license"
+        notes: "Check local requirements for waiting periods and documentation."
+        estimatedMins: 30
+        energyLevel: LOW
+        contextName: "@Errands"
+
+  # ── Phase 4: Confirmation (SEQUENTIAL — depends on RSVP lock) ─────────────
+  - title: "Phase 4 — Confirmation"
+    type: SEQUENTIAL
+    outcome: "Final headcount confirmed and all vendors updated"
+    tasks:
+      - title: "Follow up with non-responders"
+        notes: "Contact guests who haven't RSVP'd by the deadline. Phone calls work better than email."
+        estimatedMins: 60
+        energyLevel: MEDIUM
+        contextName: "@Phone"
+
+      - title: "Compile final headcount"
+        notes: "Lock RSVP responses, tally attendance and party sizes."
+        estimatedMins: 30
+        energyLevel: LOW
+        contextName: "@Computer"
+
+      - title: "Compile dietary restrictions list"
+        notes: "Consolidate all dietary needs from RSVP responses. Share with caterer."
+        estimatedMins: 20
+        energyLevel: LOW
+        contextName: "@Computer"
+
+      - title: "Send final headcount to caterer"
+        estimatedMins: 15
+        energyLevel: LOW
+        contextName: "@Phone"
+
+      - title: "Send final headcount to venue"
+        estimatedMins: 15
+        energyLevel: LOW
+        contextName: "@Phone"
+
+      - title: "Finalize seating chart"
+        notes: "Assign tables based on confirmed guest list."
+        estimatedMins: 45
+        energyLevel: HIGH
+        contextName: "@Computer"
+
+      - title: "Confirm all vendor contracts and final payments"
+        notes: "Review each vendor contract. Confirm arrival times, setup requirements, final balances."
+        estimatedMins: 60
+        energyLevel: MEDIUM
+        contextName: "@Computer"
+
+  # ── Phase 5: Final Week (SEQUENTIAL — day-of logistics) ───────────────────
+  - title: "Phase 5 — Final Week"
+    type: SEQUENTIAL
+    outcome: "Everything ready for the wedding day"
+    tasks:
+      - title: "Confirm timeline with all vendors"
+        notes: "Send day-of timeline to photographer, DJ, florist, caterer, officiant, transport."
+        estimatedMins: 45
+        energyLevel: MEDIUM
+        contextName: "@Computer"
+
+      - title: "Prepare vendor gratuity envelopes"
+        notes: "See the Vendor Gratuity Guide wiki page. Label each envelope with vendor name and amount."
+        estimatedMins: 30
+        energyLevel: LOW
+        contextName: "@Home"
+
+      - title: "Assign gratuity distribution to a trusted person"
+        notes: "Give all envelopes to best man, maid of honor, or family member with instructions."
+        estimatedMins: 10
+        energyLevel: LOW
+        contextName: "@Anywhere"
+
+      - title: "Pack wedding day emergency kit"
+        notes: "Sewing kit, stain remover, pain reliever, tissues, breath mints, phone charger, bobby pins, double-sided tape."
+        estimatedMins: 20
+        energyLevel: LOW
+        contextName: "@Home"
+
+      - title: "Attend rehearsal and rehearsal dinner"
+        estimatedMins: 180
+        energyLevel: HIGH
+
+      - title: "Prepare items to bring to venue"
+        notes: "Guest book, card box, place cards, favors, cake topper, toasting glasses, decorations."
+        estimatedMins: 30
+        energyLevel: MEDIUM
+        contextName: "@Home"
+
+      - title: "Get a good night's sleep"
+        notes: "You've done all the planning — tomorrow is the celebration. Enjoy it!"
+        estimatedMins: 5
+        energyLevel: LOW
+        contextName: "@Home"
+
+  # ── Phase 6: Post-Wedding (SEQUENTIAL — wrap-up) ──────────────────────────
+  - title: "Phase 6 — Post-Wedding"
+    type: SEQUENTIAL
+    outcome: "All post-wedding tasks complete"
+    tasks:
+      - title: "Send thank-you cards"
+        notes: "Write personalized thank-you notes for gifts received. Aim to send within 2–3 months."
+        estimatedMins: 120
+        energyLevel: MEDIUM
+        contextName: "@Home"
+
+      - title: "Review and select photos with photographer"
+        estimatedMins: 60
+        energyLevel: MEDIUM
+        contextName: "@Computer"
+
+      - title: "Handle name change paperwork (if applicable)"
+        notes: "Social Security, driver's license, passport, bank accounts, insurance."
+        estimatedMins: 120
+        energyLevel: MEDIUM
+        contextName: "@Errands"
+
+      - title: "Preserve wedding dress or attire"
+        estimatedMins: 30
+        energyLevel: LOW
+        contextName: "@Errands"
+
+      - title: "Write vendor reviews"
+        notes: "Leave reviews for vendors who did great work. Helps future couples!"
+        estimatedMins: 30
+        energyLevel: LOW
+        contextName: "@Computer"
+
+      - title: "Update wedding registry — send remaining gifts to new address"
+        estimatedMins: 15
+        energyLevel: LOW
+        contextName: "@Computer"
+
+      - title: "Create shared photo album"
+        notes: "Collect and organize photos from photographer, videographer, and guests."
+        estimatedMins: 45
+        energyLevel: LOW
+        contextName: "@Computer"

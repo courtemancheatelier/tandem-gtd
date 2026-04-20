@@ -1,0 +1,21 @@
+# =============================================================================
+# Tandem GTD — Cloudflare Tunnel Configuration
+# =============================================================================
+# Template used by scripts/setup-cloudflare-tunnel.sh
+# TUNNEL_ID and TUNNEL_DOMAIN are replaced during setup.
+#
+# Installed to: /etc/cloudflared/config.yml
+# =============================================================================
+
+tunnel: TUNNEL_ID
+credentials-file: /root/.cloudflared/TUNNEL_ID.json
+
+ingress:
+  - hostname: TUNNEL_DOMAIN
+    service: http://localhost:2000
+    originRequest:
+      keepAliveTimeout: 90s
+      noTLSVerify: false
+
+  # Catch-all: reject unmatched requests
+  - service: http_status:404
